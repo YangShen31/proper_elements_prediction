@@ -1,8 +1,11 @@
+from warnings import warn
+from collections import defaultdict
+from math import factorial
 import numpy as np
-import celmech as cm
+
 from celmech.disturbing_function import df_coefficient_C, evaluate_df_coefficient_dict
-from celmech.poisson_series import PSTerm, PoissonSeries, bracket
-from celmech.disturbing_function import list_resonance_terms
+from celmech.poisson_series import PSTerm, PoissonSeries, bracket, PoissonSeriesHamiltonian
+from celmech.disturbing_function import list_resonance_terms, list_secular_terms
 
 def list_multinomial_exponents(pwr,ndim):
     r"""
@@ -33,7 +36,7 @@ def list_multinomial_exponents(pwr,ndim):
             x+=[[pow1]+y for y in subpows]
         return x
     
-from math import factorial
+
 def multinomial_coefficient(p, ks):
     """Calculate multinomial coefficient for given p and ks"""
     num = factorial(p)
@@ -41,6 +44,7 @@ def multinomial_coefficient(p, ks):
     for k in ks:
         denom *= factorial(k)
     return num // denom
+
 
 def calc_g0_and_s0(semi_major_axis,synthetic_secular_theory,GM=1.0):
     """
@@ -85,6 +89,7 @@ def calc_g0_and_s0(semi_major_axis,synthetic_secular_theory,GM=1.0):
     s0 *= 0.5*n
     return g0,s0
     
+
 class SyntheticSecularTheory():
     def __init__(self,masses,semi_major_axes,omega_vector,x_dicts,y_dicts):
         self.masses = masses
@@ -146,8 +151,7 @@ class SyntheticSecularTheory():
     
     def Ybari_to_pow_poisson_series(self,i,pow):
         return self.Yi_to_pow_poisson_series(i,pow).conj
-        
-from collections import defaultdict
+
 
 def mathcal_X_dictionary(semi_major_axis,synthetic_secular_theory,GM=1):
     n = np.sqrt(GM / semi_major_axis**3)
@@ -166,6 +170,7 @@ def mathcal_X_dictionary(semi_major_axis,synthetic_secular_theory,GM=1):
             Xcal_dict[mvec] += -m_i*n*C*amplitude
     return Xcal_dict
 
+
 def mathcal_Y_dictionary(semi_major_axis,synthetic_secular_theory,GM=1):
     n = np.sqrt(GM / semi_major_axis**3)
     z4 = [0 for _ in range(4)]
@@ -182,9 +187,8 @@ def mathcal_Y_dictionary(semi_major_axis,synthetic_secular_theory,GM=1):
         for mvec,amplitude in y_dict.items():
             Ycal_dict[mvec] += -m_i*n*C*amplitude
     return Ycal_dict
-from collections import defaultdict
-from warnings import warn
-from celmech.poisson_series import PoissonSeriesHamiltonian
+
+
 class TestParticleSecularHamiltonian():
     def __init__(self,semi_major_axis,synthetic_secular_theory,GM=1.0):
         """
@@ -477,3 +481,34 @@ class TestParticleSecularHamiltonian():
         x_soln = x0_free * np.exp(1j * self.g0 * times) + xForced
         y_soln = y0_free * np.exp(1j * self.s0 * times) + yForced
         return x_soln,y_soln
+
+
+def linear_theory_prediction(e, inc, omega, Omega, a, propa, simpler_secular_theory):
+    X = np.sqrt(2*(1-np.sqrt(1-e**2))) * np.exp(1j * omega)
+    Y = 2*(1-e**2)**(0.25) * np.sin(0.5 * inc) * np.exp(1j * Omega)
+    tp_h = TestParticleSecularHamiltonian(propa, simpler_secular_theory)
+
+	# leading order Hamiltonian
+    h2_series = tp_h.H2_poisson_series()
+
+	# list of 4th order terms
+    sec_terms = list_secular_terms(4,4)
+    h4_series = PoissonSeries(2,tp_h.synthetic_secular_theory.N_freq)
+    for k,nu in sec_terms:
+        for i in range(tp_h.synthetic_secular_theory.N_planets):
+            h4_series+=tp_h.DFTerm_poisson_series(i,k,nu)
+
+	# Strip terms that only depend on angles and not x,y,\bar{x},\bar{y}
+    angle_only_term  = lambda term: (np.all(term.k==0) and np.all(term.kbar==0))
+    h4_series_reduced = PoissonSeries.from_PSTerms([term for term in h4_series.terms if not angle_only_term(term)])
+
+	# Hamiltonian
+    h_tot = h2_series + h4_series_reduced
+    ham_ps = PoissonSeriesHamiltonian(h_tot)
+
+    u0 = X - np.sum(list(tp_h.F_e.values()))
+    v0 = Y - np.sum(list(tp_h.F_inc.values()))
+    g0 = calc_g0_and_s0(a, simpler_secular_theory)[0]
+    s0 = calc_g0_and_s0(a, simpler_secular_theory)[1]
+
+    return u0, v0, g0, s0
