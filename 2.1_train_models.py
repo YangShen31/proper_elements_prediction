@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
-from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials
 from ngboost import NGBRegressor
@@ -12,8 +11,6 @@ from ngboost.distns import Normal
 from ngboost.scores import LogScore
 import time
 from sklearn.tree import DecisionTreeRegressor
-
-from pathlib import Path
 # %%
 # Read Nesvorny catalog dataset
 nesvorny_df = pd.read_csv("data/nesvorny_catalog_dataset.csv")
@@ -29,8 +26,8 @@ for i in range(len(file_names)):
 	propsini_value = soln_h["v"]
 	g0_value = soln_h["g"]
 	s0_value = soln_h["s"]
-	des_n = file_names[i].stem.replace("integration_results_", "")
-	rows.append([des_n, prope_value, propsini_value, g0_value, s0_value])
+	des_n = file_names[i].stem.split("_")[-1]
+	rows.append([des_n, np.abs(prope_value), np.abs(propsini_value), g0_value, s0_value])
      
 df_h = pd.DataFrame(rows, columns=["Des'n", "prope_h", "propsini_h", "g0", "s0"])
 # %%
@@ -63,13 +60,13 @@ trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_i
 valX_e, testX_e, valX_inc, testX_inc, valY_e, testY_e, valY_inc, testY_inc = train_test_split(testX_e, testX_inc, testY_e, testY_inc, test_size=0.5, random_state=42)
 
 space = {
-	'max_depth': hp.qloguniform('x_max_depth', np.log(5), np.log(40), 1),
+	'max_depth': hp.qloguniform('max_depth', np.log(5), np.log(40), 1),
 	'minibatch_frac': hp.uniform('minibatch_frac', 0.1, 1.0),
 	'learning_rate': hp.loguniform('learning_rate', np.log(0.01), np.log(0.3))
 }
 # %%
 # Train the model for the proper eccentricity
-def objective(params):
+def objective(params): # pyright: ignore[reportRedeclaration]
 	clf = NGBRegressor(
 		Dist=Normal,
 		Score=LogScore,
@@ -90,24 +87,27 @@ def objective(params):
 trials = Trials()
 start = time.time()
 
-best_ecc = fmin(fn=objective, space = space, algo = tpe.suggest, max_evals = 10, trials = trials, rstate=np.random.default_rng(seed=0))
+# best_ecc = fmin(fn=objective, space = space, algo = tpe.suggest, max_evals = 10, trials = trials, rstate=np.random.default_rng(seed=0))
+best_ecc = {'learning_rate': np.float64(0.040346736610987484), 'max_depth': np.float64(22.0), 'minibatch_frac': np.float64(0.497938840723922)}
 
 end = time.time()
 print("Best hyperparameters:", best_ecc)
 print("Optimization Time: %.2f seconds" % (end - start))
-
+# %%
 final_model_e = NGBRegressor(
 	Dist=Normal,
 	Score=LogScore,
 	n_estimators=500,
 	natural_gradient=True,
-	minibatch_frac= best_ecc['minibatch_frac'], # 1
+	minibatch_frac=best_ecc['minibatch_frac'], # 1
 	learning_rate=best_ecc['learning_rate'], # 0.1
-	Base=DecisionTreeRegressor(max_depth = int(max_depth = best_e['max_depth'])) # 6
+	Base=DecisionTreeRegressor(max_depth=int(best_ecc['max_depth'])) # 6
 )
 
+final_model_e.fit(trainX_e, trainY_e)
+
 # Save model for eccentricity
-ngb = Path("models/best_model_e_final.ngb")
+ngb = Path("data/models/best_model_e_final.ngb")
 with ngb.open("wb") as f:
     pickle.dump(final_model_e, f)
 # %%
@@ -133,11 +133,13 @@ def objective(params):
 trials = Trials()
 start = time.time()
 
-best_inc = fmin(fn=objective, space = space, algo = tpe.suggest, max_evals = 10, trials = trials, rstate=np.random.default_rng(seed=0))
+# best_inc = fmin(fn=objective, space = space, algo = tpe.suggest, max_evals = 10, trials = trials, rstate=np.random.default_rng(seed=0))
+best_inc = {'learning_rate': np.float64(0.040346736610987484), 'max_depth': np.float64(22.0), 'minibatch_frac': np.float64(0.497938840723922)}
+
 end = time.time()
 print("Best hyperparameters:", best_inc)
 print("Optimization Time: %.2f seconds" % (end - start))
-
+# %%
 final_model_inc = NGBRegressor(
 	Dist=Normal,
 	Score=LogScore,
@@ -145,40 +147,13 @@ final_model_inc = NGBRegressor(
 	natural_gradient=True,
 	minibatch_frac= best_inc['minibatch_frac'], # 1
 	learning_rate=best_inc['learning_rate'], # 0.1
-	Base=DecisionTreeRegressor(max_depth = int(max_depth = best_inc['max_depth'])) # 6
+	Base=DecisionTreeRegressor(max_depth=int(best_inc['max_depth'])) # 6
 )
+
+final_model_inc.fit(trainX_inc, trainY_inc)
 
 # Save model for inclination
 ngb = Path("data/models/best_model_inc_final.ngb")
 with ngb.open("wb") as f:
     pickle.dump(final_model_inc, f)
 # %%
-# Save all predicted values into a table for analysis
-pred_dist = final_model_e.pred_dist(testX_e)
-
-pred_e = pred_dist.loc
-std_e = pred_dist.scale
-
-pred_dist = final_model_inc.pred_dist(testX_inc)
-
-pred_inc = pred_dist.loc
-std_inc = pred_dist.scale
-
-test_indices = testX_e.index.tolist()
-
-df_ngb = pd.DataFrame(list(zip(testY_e, pred_e, std_e, testY_inc, pred_inc, std_inc)), columns = ["actual_dele", "pred_e", "error_e", "actual_delsini", "pred_inc", "error_inc"])
-df_ngb = df_ngb.reset_index(drop=True)
-test_data = merged_df.loc[test_indices].reset_index(drop=True)
-
-df_ngb["Des'n"] = test_data["Des'n"]
-df_ngb["e"] = test_data["e"]
-df_ngb["Incl."] = test_data["Incl."]
-df_ngb["propa"] = test_data["propa"]
-df_ngb["prope"] = test_data["prope"]
-df_ngb["prope_h"] = test_data["prope_h"]
-df_ngb["propsini"] = test_data["propsini"]
-df_ngb["propsini_h"] = test_data["propsini_h"]
-df_ngb["da"] = test_data["da"]
-df_ngb["dsini"] = test_data["dsini"]
-df_ngb["de"] = test_data["de"]
-df_ngb.to_csv("data/model_results.csv")
