@@ -3,7 +3,8 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from ngboost import NGBRegressor
+import xgboost as xgb
+
 from sklearn.model_selection import train_test_split
 # %%
 merged_df = pd.read_csv("data/merged_elements.csv")
@@ -18,27 +19,25 @@ delg = merged_df['g0'] - merged_df['g']
 s = merged_df['s']
 
 trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, test_size=0.4, random_state=42)
-valX_e, testX_e, valX_inc, testX_inc, valY_e, testY_e, valY_inc, testY_inc = train_test_split(testX_e, testX_inc, testY_e, testY_inc, test_size=0.5, random_state=42)
+
+dtrain_e = xgb.DMatrix(trainX_e, trainY_e)
+dtest_e = xgb.DMatrix(testX_e, testY_e)
+dtrain_inc = xgb.DMatrix(trainX_inc, trainY_inc)
+dtest_inc = xgb.DMatrix(testX_inc, testY_inc)
 # %%
-with open("data/models/best_model_e_final.ngb", "rb") as f:
-    final_model_e = pickle.load(f)
-with open("data/models/best_model_inc_final.ngb", "rb") as f:
-    final_model_inc = pickle.load(f)
+final_model_e = xgb.Booster()
+final_model_e.load_model("data/models/best_model_e_final.xgb")
+final_model_inc = xgb.Booster()
+final_model_inc.load_model("data/models/best_model_inc_final.xgb")
 # %%
 # Save all predicted values into a table for analysis
-pred_dist = final_model_e.pred_dist(testX_e)
+pred_e = final_model_e.predict(dtest_e)
 
-pred_e = pred_dist.loc
-std_e = pred_dist.scale
-
-pred_dist = final_model_inc.pred_dist(testX_inc)
-
-pred_inc = pred_dist.loc
-std_inc = pred_dist.scale
+pred_inc = final_model_inc.predict(dtest_inc)
 
 test_indices = testX_e.index.tolist()
 
-df_ngb = pd.DataFrame(list(zip(testY_e, pred_e, std_e, testY_inc, pred_inc, std_inc)), columns = ["actual_dele", "pred_dele", "error_e", "actual_delsini", "pred_delsini", "error_sini"])
+df_ngb = pd.DataFrame(list(zip(testY_e, pred_e, testY_inc, pred_inc)), columns = ["actual_dele", "pred_dele", "actual_delsini", "pred_delsini"])
 df_ngb = df_ngb.reset_index(drop=True)
 test_data = merged_df.loc[test_indices].reset_index(drop=True)
 
@@ -66,3 +65,4 @@ df_ngb["prope"] = test_data["prope"]
 df_ngb["propsini"] = test_data["propsini"]
 
 df_ngb.to_csv("data/model_results.csv")
+# %%
