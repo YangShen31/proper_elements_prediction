@@ -9,6 +9,8 @@ Download `MPCORB.DAT.gz` and `proper_catalog24.dat.gz` from [boulder.swri.edu/~d
 
 In a new virtual environment, install the required libraries as specified in `requirements.txt`
 
+When you clone the git repo, make sure to recursively clone all submodules. This can be done with `git clone --recurse-submodules`
+
 ### Model Training
 To train eccentricity and inclination models from scratch run `1_linear_prediction.py` and `2_train_models.py`
 

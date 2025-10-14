@@ -1,0 +1,3 @@
+[submodule "5_uncertainty_testing/SBDynT"]
+	path = 5_uncertainty_testing/SBDynT
+	url = https://github.com/small-body-dynamics/SBDynT
