@@ -72,7 +72,7 @@ def ecc_inc_prediction(r):
 
 	u0, v0, g0, s0 = linear_theory_prediction(e, inc, omega, Omega, a, row['propa'], simpler_secular_theory)
 
-	np.savez(prediction_path / f"linear_prediction_results_{row["Des'n"]}", u=u0, v=v0, g=g0, s=s0)
+	np.savez(prediction_path / f"linear_prediction_results_{row["Des'n"]}", u=u0, v = v0, g=g0, s=s0)
 # %%
 with Pool(40) as p:
 	table = p.map(ecc_inc_prediction, nesvorny_df.iterrows())

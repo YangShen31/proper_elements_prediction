@@ -2,7 +2,6 @@ from warnings import warn
 from collections import defaultdict
 from math import factorial
 import numpy as np
-import pickle
 
 from celmech.disturbing_function import df_coefficient_C, evaluate_df_coefficient_dict
 from celmech.poisson_series import PSTerm, PoissonSeries, bracket, PoissonSeriesHamiltonian

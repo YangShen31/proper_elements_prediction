@@ -4,7 +4,8 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import train_test_split
+from hyperopt import hp, fmin, tpe, STATUS_OK, Trials
 import time
 import xgboost as xgb
 from xgboost.sklearn import XGBRegressor
@@ -57,65 +58,83 @@ delg = merged_df['g0'] - merged_df['g']
 s = merged_df['s']
 
 trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, test_size=0.4, random_state=42)
-# valX_e, testX_e, valX_inc, testX_inc, valY_e, testY_e, valY_inc, testY_inc = train_test_split(testX_e, testX_inc, testY_e, testY_inc, test_size=0.5, random_state=42)
 
-param1_grid = {
-    'max_depth': np.arange(3, 21.01, 3, dtype=int),
-    'min_child_weight': np.arange(1, 4.01, 1, dtype=int),
-    'subsample': np.arange(0.8, 1.01, 0.1),
-    'colsample_bytree': np.arange(0.8, 1.01, 0.1)
-}
-param2_grid = {
-    'learning_rate': [0.1, 0.01, 0.05],
-    'n_estimators': [900, 1200, 1500, 2000, 2500]
+space = {
+	'max_depth': hp.qloguniform('max_depth', np.log(10), np.log(40), 1),
+    'min_child_weight': hp.loguniform('min_child_weight', 0, np.log(30)),
+    'subsample': hp.uniform ('subsample', 0.8, 1)
 }
 # %%
+dtrain_e = xgb.DMatrix(trainX_e, trainY_e)
+dtest_e = xgb.DMatrix(testX_e, testY_e)
+dtrain_inc = xgb.DMatrix(trainX_inc, trainY_inc)
+dtest_inc = xgb.DMatrix(testX_inc, testY_inc)
+# %%
+# Train the model for the proper eccentricity
+def objective(params): # pyright: ignore[reportRedeclaration]
+    clf = XGBRegressor(n_estimators = 50,
+                            max_depth = int(params['max_depth']), 
+                            min_child_weight = params['min_child_weight'],
+                            subsample = params['subsample'],
+                            learning_rate = 0.15, seed = 0,)
+
+    score = xgb.cv(clf.get_xgb_params(), dtrain_e, nfold = 5, metrics = "rmse", early_stopping_rounds=10)
+    avg_score =  np.mean(score["test-rmse-mean"])
+    error = np.mean(score["test-rmse-std"])
+    
+    print("SCORE:", avg_score, "+/-", error)
+    return {'loss': 1-avg_score, 'status': STATUS_OK, "cv_score": avg_score , "cv_error": error}
+
+trials = Trials()
 start = time.time()
-grid_search1 = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
-                           param_grid=param1_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
 
-grid_search1.fit(trainX_e, trainY_e)
-print(grid_search1.best_params_)
-
-grid_search2 = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1.best_params_, n_jobs=40),
-                           param_grid=param2_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
-
-grid_search2.fit(trainX_e, trainY_e)
+best_ecc = fmin(fn=objective, space = space, algo = tpe.suggest, max_evals = 100, trials = trials, rstate=np.random.default_rng(seed=0))
 
 end = time.time()
-print(f"Best score: {grid_search2.best_score_:.3}")
-print(f"Best parameters: {grid_search1.best_params_ | grid_search2.best_params_}")
+print("Best hyperparameters:", best_ecc)
 print("Optimization Time: %.2f seconds" % (end - start))
 # %%
-# {'colsample_bytree': np.float64(1.0), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2500}
-final_model_e = XGBRegressor(**{**grid_search1.best_params_, **grid_search2.best_params_}, n_jobs=40)
+final_model_e = XGBRegressor(learning_rate = 0.05, 
+                         max_depth = 22, #int(best_ecc['max_depth']), 
+                         subsample = best_ecc['subsample'],
+                         min_child_weight = best_ecc['min_child_weight'])
 
-final_model_e.fit(trainX_e, trainY_e)
+final_model_e = xgb.train(dtrain=dtrain_e, params=final_model_e.get_params(), num_boost_round=2000)
 
 # Save model for eccentricity
 pth_e = Path("data/models/best_model_e_final.xgb")
 final_model_e.save_model(str(pth_e))
 # %%
+# Train the model for the proper inclination
+def objective(params): # pyright: ignore[reportRedeclaration]
+    clf = XGBRegressor(n_estimators = 50,
+                            max_depth = int(params['max_depth']), 
+                            min_child_weight = params['min_child_weight'],
+                            subsample = params['subsample'],
+                            learning_rate = 0.15, seed = 0,)
+    
+    score = xgb.cv(clf.get_xgb_params(), dtrain_inc, nfold = 5, metrics = "rmse", early_stopping_rounds=10)
+    avg_score =  np.mean(score["test-rmse-mean"])
+    error = np.mean(score["test-rmse-std"])
+    
+    print("SCORE:", avg_score, "+/-", error)
+    return {'loss': 1-avg_score, 'status': STATUS_OK, "cv_score": avg_score , "cv_error": error}
+
+trials = Trials()
 start = time.time()
-grid_search1 = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
-                           param_grid=param1_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
 
-grid_search1.fit(trainX_inc, trainY_inc)
-
-grid_search2 = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1.best_params_, n_jobs=40),
-                           param_grid=param2_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
-
-grid_search2.fit(trainX_inc, trainY_inc)
+best_inc = fmin(fn=objective, space = space, algo = tpe.suggest, max_evals = 100, trials = trials, rstate=np.random.default_rng(seed=0))
 
 end = time.time()
-print(f"Best score: {grid_search2.best_score_:.3}")
-print(f"Best parameters: {grid_search1.best_params_ | grid_search2.best_params_}")
+print("Best hyperparameters:", best_inc)
 print("Optimization Time: %.2f seconds" % (end - start))
 # %%
-# {'colsample_bytree': np.float64(0.9), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2000
-final_model_inc = XGBRegressor(**{**grid_search1.best_params_, **grid_search2.best_params_}, n_jobs=40)
+final_model_inc = XGBRegressor(learning_rate = 0.05, 
+                         max_depth = 22, #int(best_inc['max_depth']), 
+                         subsample = best_inc['subsample'],
+                         min_child_weight = best_inc['min_child_weight'])
 
-final_model_inc.fit(trainX_inc, trainY_inc)
+final_model_inc = xgb.train(dtrain=dtrain_inc, params=final_model_inc.get_params(), num_boost_round=2000)
 
 # Save model for inclination
 pth_inc = Path("data/models/best_model_inc_final.xgb")

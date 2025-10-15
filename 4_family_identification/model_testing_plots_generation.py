@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 
 # load the model predicted results
-ngb_df = pd.read_csv("../data/model_results.csv")
+ngb_df = pd.read_csv("tables_for_analysis/NGBooster_result.csv")
 ngb_df["pred_e"] = ngb_df["pred_e"] + ngb_df["e"]
 ngb_df["pred_sini"] = ngb_df["pred_inc"] + np.sin(ngb_df['Incl.']*np.pi/180)
 
@@ -113,7 +113,7 @@ def histogram_generation(d_cutoff, family_df):
     return len(family_slab_df), num_family_slab, len(filtered_df)
 
 df = pd.read_csv("asteroid_families_csv.txt")
-dataset_path = Path('../data/family_tables')
+dataset_path = Path('family_tables')
 filenames = list(dataset_path.glob('*.csv'))
 name_list = []
 total_family_list = []
