@@ -9,8 +9,43 @@ import time
 import xgboost as xgb
 from xgboost.sklearn import XGBRegressor
 # %%
+# Read Nesvorny catalog dataset
+nesvorny_df = pd.read_csv("data/nesvorny_catalog_dataset.csv", index_col=0, dtype={"Des'n": str})
+
+# Read linear prediction results
+prediction_path = Path("data/linear_predictions")
+file_names = list(prediction_path.glob("*.npz"))
+rows = []
+
+for i in range(len(file_names)):
+	soln_h = np.load(file_names[i])
+	prope_value = soln_h["u"]
+	propsini_value = soln_h["v"]
+	g0_value = soln_h["g"]
+	s0_value = soln_h["s"]
+	des_n = file_names[i].stem.replace("linear_prediction_results", "")
+	rows.append([des_n, np.abs(prope_value).item(), np.abs(propsini_value).item(), g0_value.item(), s0_value.item()])
+     
+df_h = pd.DataFrame(rows, columns=["Des'n", "prope_h", "propsini_h", "g0", "s0"])
+# %%
+# Get merged dataframe for later model training
+merged_df = pd.merge(nesvorny_df, df_h, on="Des'n", how="inner")
+
+merged_df["prope_h"] = np.abs(merged_df["prope_h"])
+merged_df["propsini_h"] = np.abs(merged_df["propsini_h"])
+merged_df['prope_h'] = pd.to_numeric(merged_df['prope_h'], errors='coerce')
+merged_df['propsini_h'] = pd.to_numeric(merged_df['propsini_h'], errors='coerce')
+merged_df['Node'] = pd.to_numeric(merged_df['Node'], errors='coerce')
+merged_df['Peri.'] = pd.to_numeric(merged_df['Peri.'], errors='coerce')
+merged_df['ecospo'] = merged_df['prope_h']*np.cos((merged_df['Node']+merged_df['Peri.'])*np.pi/180)
+merged_df['esinpo'] = merged_df['prope_h']*np.sin((merged_df['Node']+merged_df['Peri.'])*np.pi/180)
+merged_df['sinicosO'] = np.sin(merged_df['propsini_h']*np.pi/180)*np.cos(merged_df['Node']*np.pi/180)
+merged_df['sinisinO'] = np.sin(merged_df['propsini_h']*np.pi/180)*np.sin(merged_df['Node']*np.pi/180)
+
+merged_df.to_csv("data/merged_elements.csv")
+# %%
 # Read merged dataframe for model training
-merged_df = pd.read_csv("data/merged_elements.csv")
+merged_df = pd.read_csv("data/merged_elements.csv", index_col=0, dtype={"Des'n": str})
 # %%
 features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'propa', 'g0', 'prope_h']
 features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'propa', 's0', 'propsini_h']
