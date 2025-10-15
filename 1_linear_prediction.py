@@ -9,31 +9,12 @@ from multiprocessing import Pool
 import rebound as rb
 import celmech as cm
 
-from linear_theory.test_particle_secular_hamiltonian import linear_theory_prediction, SyntheticSecularTheory
-# hack to make pickle load work
-from linear_theory import test_particle_secular_hamiltonian
-import sys
-sys.modules['test_particle_secular_hamiltonian'] = test_particle_secular_hamiltonian
+from linear_theory import linear_theory_prediction, make_simpler_secular_theory
 # %%
 prediction_path = Path("data/linear_predictions")
 prediction_path.mkdir(parents=True, exist_ok=True)
 # %%
-try:
-	with open("linear_theory/solar_system_synthetic_solution.bin","rb") as fi:
-		solar_system_synthetic_theory=pickle.load(fi)
-except Exception as e:
-	print("Cannot find solar_system_synthetic_solution.bin. Please run OuterSolarSystemSyntheticSecularSolution.ipynb first")
-	raise Exception()
-# %%
-
-truncate_dictionary = lambda d,tol: {key:val for key,val in d.items() if np.abs(val)>tol}
-simpler_secular_theory = SyntheticSecularTheory(
-	solar_system_synthetic_theory.masses,
-	solar_system_synthetic_theory.semi_major_axes,
-	solar_system_synthetic_theory.omega_vector,
-	[truncate_dictionary(x_d,1e-3) for x_d in solar_system_synthetic_theory.x_dicts],
-	[truncate_dictionary(y_d,1e-3) for y_d in solar_system_synthetic_theory.y_dicts]
-)
+simpler_secular_theory = make_simpler_secular_theory()
 
 df = pd.read_fwf('data/MPCORB.DAT', colspecs=[[0,7], [8,14], [15,19], [20,25], [26,35], [36,46], [47, 57], [58,68], [69,81], [82, 91], [92, 103]])
 df = df[df['Epoch'] == 'K239D'] # take only ones at common epoch--almost all of them
