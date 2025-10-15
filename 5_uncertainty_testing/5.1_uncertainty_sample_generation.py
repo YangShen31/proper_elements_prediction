@@ -66,7 +66,4 @@ for name in high_error_list[:100]:
 df = df[df["x"]!= 0]
 df.to_csv("../data/uncertainty_asteroids_sampled.csv")
 len(df)
-
-
-
 # %%
