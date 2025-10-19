@@ -490,26 +490,25 @@ def linear_theory_prediction(e, inc, omega, Omega, a, propa, simpler_secular_the
     tp_h = TestParticleSecularHamiltonian(propa, simpler_secular_theory)
 
 	# leading order Hamiltonian
-    h2_series = tp_h.H2_poisson_series()
+    # h2_series = tp_h.H2_poisson_series()
 
-	# list of 4th order terms
-    sec_terms = list_secular_terms(4,4)
-    h4_series = PoissonSeries(2,tp_h.synthetic_secular_theory.N_freq)
-    for k,nu in sec_terms:
-        for i in range(tp_h.synthetic_secular_theory.N_planets):
-            h4_series+=tp_h.DFTerm_poisson_series(i,k,nu)
+	# # list of 4th order terms
+    # sec_terms = list_secular_terms(4,4)
+    # h4_series = PoissonSeries(2,tp_h.synthetic_secular_theory.N_freq)
+    # for k,nu in sec_terms:
+    #     for i in range(tp_h.synthetic_secular_theory.N_planets):
+    #         h4_series+=tp_h.DFTerm_poisson_series(i,k,nu)
 
-	# Strip terms that only depend on angles and not x,y,\bar{x},\bar{y}
-    angle_only_term  = lambda term: (np.all(term.k==0) and np.all(term.kbar==0))
-    h4_series_reduced = PoissonSeries.from_PSTerms([term for term in h4_series.terms if not angle_only_term(term)])
+	# # Strip terms that only depend on angles and not x,y,\bar{x},\bar{y}
+    # angle_only_term  = lambda term: (np.all(term.k==0) and np.all(term.kbar==0))
+    # h4_series_reduced = PoissonSeries.from_PSTerms([term for term in h4_series.terms if not angle_only_term(term)])
 
-	# Hamiltonian
-    h_tot = h2_series + h4_series_reduced
-    ham_ps = PoissonSeriesHamiltonian(h_tot)
+	# # Hamiltonian
+    # h_tot = h2_series + h4_series_reduced
+    # ham_ps = PoissonSeriesHamiltonian(h_tot)
 
     u0 = X - np.sum(list(tp_h.F_e.values()))
     v0 = Y - np.sum(list(tp_h.F_inc.values()))
-    g0 = calc_g0_and_s0(a, simpler_secular_theory)[0]
-    s0 = calc_g0_and_s0(a, simpler_secular_theory)[1]
+    g0, s0 = calc_g0_and_s0(a, simpler_secular_theory)
 
     return u0, v0, g0, s0
