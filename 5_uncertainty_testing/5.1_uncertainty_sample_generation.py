@@ -1,15 +1,14 @@
 import sys
-#change the next line to reflect where you have downloaded the source code
 sys.path.insert(0, 'SBDynT/src')
 import sbdynt as sbd
 
-# %%
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from astroquery.jplsbdb import SBDB
 from tqdm import tqdm
-
+from time import sleep
+# %%
 merged_df = pd.read_csv("../data/model_results.csv")
 
 np.random.seed(42)
@@ -67,7 +66,7 @@ high_error_list = query_high_df["Des'n"].to_list()
 # %%
 clones = 30
 columns = ["Des'n", "epoch", "x", "y", "z", "vx", "vy", "vz"]
-df = pd.DataFrame(columns=columns)
+df_random = pd.DataFrame(columns=columns)
 for name in random_list[:100]:
 	flag, epoch, x,y,z,vx,vy,vz, weights  = sbd.query_sb_from_jpl(des=name,clones=clones)
 	df1 = []
@@ -90,17 +89,16 @@ for name in random_list[:100]:
 				"vz": vz[j]
 			})
 	df1 = pd.DataFrame(df1)
-	df = pd.concat([df, df1])
+	df_random = pd.concat([df_random, df1])
+	sleep(0.1)
 
 # %%
-df = df[df["x"]!= 0].iloc[:1500]
-df.to_csv("../data/uncertainty_asteroids_sampled_random.csv")
-len(df)
-
+df_random = df_random[df_random["x"]!= 0].iloc[:1500]
+df_random["type"] = "random"
 # %%
 clones = 30
 columns = ["Des'n", "epoch", "x", "y", "z", "vx", "vy", "vz"]
-df = pd.DataFrame(columns=columns)
+df_high_error = pd.DataFrame(columns=columns)
 for name in high_error_list:
 	flag, epoch, x,y,z,vx,vy,vz, weights  = sbd.query_sb_from_jpl(des=name,clones=clones)
 	df1 = []
@@ -123,9 +121,12 @@ for name in high_error_list:
 				"vz": vz[j]
 			})
 	df1 = pd.DataFrame(df1)
-	df = pd.concat([df, df1])
+	df_high_error = pd.concat([df_high_error, df1])
+	sleep(0.1)
 
 # %%
-df = df[df["x"]!= 0].iloc[:1500]
-df.to_csv("../data/uncertainty_asteroids_sampled_high_error.csv")
-len(df)
+df_high_error = df_high_error[df_high_error["x"]!= 0].iloc[:1500]
+df_high_error["type"] = "high_error"
+# %%
+df_combined = pd.concat([df_random, df_high_error], ignore_index=True, sort=False)
+df_combined.to_csv("../data/uncertainty_asteroids_sampled.csv")
