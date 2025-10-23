@@ -56,8 +56,7 @@ delsini = merged_df['propsini']-np.sin(merged_df['Incl.']*np.pi/180)
 delg = merged_df['g0'] - merged_df['g']
 s = merged_df['s']
 
-trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, test_size=0.4, random_state=42)
-# valX_e, testX_e, valX_inc, testX_inc, valY_e, testY_e, valY_inc, testY_inc = train_test_split(testX_e, testX_inc, testY_e, testY_inc, test_size=0.5, random_state=42)
+trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, test_size=0.8, random_state=42)
 
 param1_grid = {
     'max_depth': np.arange(3, 21.01, 3, dtype=int),
@@ -71,52 +70,62 @@ param2_grid = {
 }
 # %%
 start = time.time()
-grid_search1 = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
-                           param_grid=param1_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
+grid_search1_e = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
+                           param_grid=param1_grid, cv=5, scoring="neg_mean_squared_error", verbose=10)
 
-grid_search1.fit(trainX_e, trainY_e)
-print(grid_search1.best_params_)
+grid_search1_e.fit(trainX_e, trainY_e)
+print(grid_search1_e.best_params_)
 
-grid_search2 = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1.best_params_, n_jobs=40),
-                           param_grid=param2_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
+grid_search2_e = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1_e.best_params_, n_jobs=40),
+                           param_grid=param2_grid, cv=5, scoring="neg_mean_squared_error", verbose=10)
 
-grid_search2.fit(trainX_e, trainY_e)
+grid_search2_e.fit(trainX_e, trainY_e)
 
 end = time.time()
-print(f"Best score: {grid_search2.best_score_:.3}")
-print(f"Best parameters: {grid_search1.best_params_ | grid_search2.best_params_}")
+print(f"Best score: {grid_search2_e.best_score_:.3}")
+print(f"Best parameters: {grid_search1_e.best_params_ | grid_search2_e.best_params_}")
 print("Optimization Time: %.2f seconds" % (end - start))
 # %%
 # {'colsample_bytree': np.float64(1.0), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2500}
-final_model_e = XGBRegressor(**{**grid_search1.best_params_, **grid_search2.best_params_}, n_jobs=40)
-
-final_model_e.fit(trainX_e, trainY_e)
+# final_model_e = XGBRegressor(**{**grid_search1.best_params_, **grid_search2.best_params_}, n_jobs=40)
+# final_model_e.fit(trainX_e, trainY_e)
+final_model_e = grid_search2_e.best_estimator_
 
 # Save model for eccentricity
 pth_e = Path("data/models/best_model_e_final.xgb")
 final_model_e.save_model(str(pth_e))
 # %%
 start = time.time()
-grid_search1 = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
-                           param_grid=param1_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
+grid_search1_inc = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
+                           param_grid=param1_grid, cv=5, scoring="neg_mean_squared_error", verbose=10)
 
-grid_search1.fit(trainX_inc, trainY_inc)
+grid_search1_inc.fit(trainX_inc, trainY_inc)
 
-grid_search2 = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1.best_params_, n_jobs=40),
-                           param_grid=param2_grid, cv=3, scoring="neg_mean_squared_error", verbose=10)
+grid_search2_inc = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1_inc.best_params_, n_jobs=40),
+                           param_grid=param2_grid, cv=5, scoring="neg_mean_squared_error", verbose=10)
 
-grid_search2.fit(trainX_inc, trainY_inc)
+grid_search2_inc.fit(trainX_inc, trainY_inc)
 
 end = time.time()
-print(f"Best score: {grid_search2.best_score_:.3}")
-print(f"Best parameters: {grid_search1.best_params_ | grid_search2.best_params_}")
+print(f"Best score: {grid_search2_inc.best_score_:.3}")
+print(f"Best parameters: {grid_search1_inc.best_params_ | grid_search2_inc.best_params_}")
 print("Optimization Time: %.2f seconds" % (end - start))
 # %%
 # {'colsample_bytree': np.float64(0.9), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2000
-final_model_inc = XGBRegressor(**{**grid_search1.best_params_, **grid_search2.best_params_}, n_jobs=40)
-
-final_model_inc.fit(trainX_inc, trainY_inc)
+# final_model_inc = XGBRegressor(**{**grid_search1.best_params_, **grid_search2.best_params_}, n_jobs=40)
+# final_model_inc.fit(trainX_inc, trainY_inc)
+final_model_inc = grid_search2_inc.best_estimator_
 
 # Save model for inclination
 pth_inc = Path("data/models/best_model_inc_final.xgb")
 final_model_inc.save_model(str(pth_inc))
+# %%
+e_best_idx = grid_search2_e.best_index_
+e_score_mean = grid_search2_e.cv_results_["mean_test_score"][e_best_idx]
+e_score_std = 1.96 * grid_search2_e.cv_results_["std_test_score"][e_best_idx] / np.sqrt(5)
+print(f"Ecc score: {-e_score_mean:.5} ± {e_score_std:.5}")
+
+inc_best_idx = grid_search2_inc.best_index_
+inc_score_mean = grid_search2_inc.cv_results_["mean_test_score"][inc_best_idx]
+inc_score_std = 1.96 * grid_search2_inc.cv_results_["std_test_score"][inc_best_idx] / np.sqrt(5)
+print(f"Inc score: {-inc_score_mean:.5} ± {inc_score_std:.5}")
