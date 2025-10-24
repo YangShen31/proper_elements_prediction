@@ -5,4 +5,7 @@ pandas==2.2.3
 matplotlib==3.10.0
 scikit-learn==1.7.0
 hyperopt==0.2.7
-ngboost==0.5.6
+xgboost==3.0.2
+assist==1.1.11
+tqdm
+astroquery==0.4.10

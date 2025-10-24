@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import rebound as rb
-import celmech as cm
 
 import sys
 sys.path.insert(0, 'SBDynT/src')
@@ -18,37 +17,37 @@ print(f"Outer Planets Only: {outer_only}")
 integration_path = Path("../data") / "uncertainty_integrations"
 integration_path.mkdir(parents=True, exist_ok=True)
 # %%
-merged_df = pd.read_csv("tables_for_analysis/uncertainty_asteroids_sampled.csv", index_col=0)
+merged_df = pd.read_csv("../data/uncertainty_asteroids_sampled.csv", index_col=0)
 start_time = 2460200.5
 # %%
 sim = rb.Simulation()
 
-(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='sun',epoch=start_time, hash='sun')
-if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='sun',epoch=start_time)
+if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='sun')
 if not outer_only:
-    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='mercury',epoch=start_time, hash='mercury')
-    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='mercury',epoch=start_time)
+    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='mercury')
 
-    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='venus',epoch=start_time, hash='venus')
-    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='venus',epoch=start_time)
+    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='venus')
 
-    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='earth',epoch=start_time, hash='earth')
-    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='earth',epoch=start_time)
+    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='earth')
 
-    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='mars',epoch=start_time, hash='mars')
-    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+    (flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='mars',epoch=start_time)
+    if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='mars')
 
-(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='jupiter',epoch=start_time, hash='jupiter')
-if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='jupiter',epoch=start_time)
+if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='jupiter')
 
-(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='saturn',epoch=start_time, hash='saturn')
-if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='saturn',epoch=start_time)
+if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='saturn')
 
-(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='uranus',epoch=start_time, hash='uranus')
-if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='uranus',epoch=start_time)
+if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='uranus')
 
-(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='neptune',epoch=start_time, hash='neptune')
-if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2))
+(flag, mass, radius, [plx,ply,plz],[plvx,plvy,plvz]) = sbd.query_horizons_planets(obj='neptune',epoch=start_time)
+if flag: sim.add(m=mass, x=plx, y=ply, z=plz, vx=plvx/(np.pi*2), vy=plvy/(np.pi*2), vz=plvz/(np.pi*2), hash='neptune')
 
 if outer_only:
     assert len(sim.particles) == 5, "Error adding planets"
