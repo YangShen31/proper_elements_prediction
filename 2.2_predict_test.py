@@ -39,7 +39,11 @@ df_xgb["Des'n"] = test_data["Des'n"]
 
 # oscillating
 df_xgb["e"] = test_data["e"]
+df_xgb["a"] = test_data["a"]
 df_xgb["Incl."] = test_data["Incl."]
+df_xgb["Node"] = test_data["Node"]
+df_xgb["Peri."] = test_data["Peri."]
+df_xgb["M"] = test_data["M"]
 
 # linear
 df_xgb["prope_h"] = test_data["prope_h"]
