@@ -47,8 +47,8 @@ merged_df.to_csv("data/merged_elements.csv")
 # Read merged dataframe for model training
 merged_df = pd.read_csv("data/merged_elements.csv", index_col=0, dtype={"Des'n": str})
 # %%
-features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'propa', 'g0', 'prope_h']
-features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'propa', 's0', 'propsini_h']
+features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'g0', 'prope_h']
+features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 's0', 'propsini_h']
 data_e = merged_df[features_e]
 data_inc = merged_df[features_inc]
 dele = merged_df['prope']-merged_df['e']
