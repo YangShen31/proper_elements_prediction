@@ -3,8 +3,11 @@ import numpy as np
 
 # J2000.0 obliquity in radians
 EARTH_OBLIQUITY = 23.43929111 * np.pi / 180.0
-
+epoch = 2460200.5
 SUN_GM = 0.295912208285591100e-3
+
+sun_sim = rb.Simulation()
+sun_sim.add("sun", plane="ecliptic", date="JD%f"%epoch)
 
 FWD_ROTATION_MATRIX = np.array([
     [1.0, 0.0, 0.0],
@@ -32,8 +35,4 @@ def ecliptic_xyz_to_elements(p):
     '''
     Particle mass should be in units where the GM for the sun is 1, AU, and yr
     '''
-    sim = rb.Simulation()
-    sim.add("sun", plane='frame')
-    sim.add(p)
-    ps = sim.particles
-    return ps[1].orbit(primary=ps[0])
+    return p.orbit(primary=sun_sim.particles[0], G=1)
