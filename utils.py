@@ -12,7 +12,7 @@ sun_sim.add("sun", plane="ecliptic", date="JD%f"%epoch)
 FWD_ROTATION_MATRIX = np.array([
     [1.0, 0.0, 0.0],
     [0.0, np.cos(EARTH_OBLIQUITY), np.sin(EARTH_OBLIQUITY)],
-    [0.0, np.sin(EARTH_OBLIQUITY), np.cos(EARTH_OBLIQUITY)]
+    [0.0, -np.sin(EARTH_OBLIQUITY), np.cos(EARTH_OBLIQUITY)]
 ])
 
 BWD_ROTATION_MATRIX = np.array([
