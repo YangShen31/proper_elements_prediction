@@ -14,7 +14,7 @@ from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements
 # %%
 model_results = pd.read_csv("data/model_results.csv", index_col=0, dtype={"Des'n": str})
 
-prediction_path = Path("data/calc_propa")
+prediction_path = Path("data/pred_propa")
 prediction_path.mkdir(parents=True, exist_ok=True)
 ephem = assist.Ephem("data/assist/linux_m13000p17000.441", "data/assist/sb441-n16.bsp")
 
@@ -22,7 +22,6 @@ conver = 58.132440867049
 epoch = 2460200.5
 # %%
 num_to_run = len(model_results)
-# model_results = model_results.sample(num_to_run, random_state=42)
 # %%
 sun_sim = rb.Simulation()
 sun_sim.add("sun", plane="ecliptic", date="JD%f"%epoch)
@@ -63,55 +62,15 @@ def propa_calc(r):
 		p.vxyz = np.array(p.vxyz) / conver
 		p = ecliptic_to_icrf(p)
 		a[i] = orbit.a
-	
-	return row["Des'n"], np.mean(a), row["propa"]
+	np.savez(prediction_path / f"propa_prediction_results_{row["Des'n"]}", u = np.mean(a))
 
-r = propa_calc(next(model_results.iterrows()))
+	des = row["Des'n"]
+
+	return des
+
 # %%
-def propa_calc_safe(row):
-	try:
-		return propa_calc(row)
-	except Exception as e:
-		return None
-
-
 with Pool(40) as p:
-	raw_results = list(
-		tqdm(
-			p.imap(propa_calc_safe, islice(model_results.iterrows(), num_to_run)),
-			total=num_to_run
-		)
-	)
-
-results = [r for r in raw_results if r is not None]
-
-df_results = pd.DataFrame(results, columns=["Des'n", "propa_cal", "propa_nes"])
-df_results.to_csv("data/proper_a_integration_results_all.csv")
-# %%
-# calcas = np.array([x[1] for x in results])
-# trueas = np.array(model_results.head(num_to_run)["propa"])
-# desns = [x[0] for x in results]
-
-# print(np.mean((calcas - trueas)**2))
-# prop_a_df = pd.DataFrame({"Des'n": desns, "nesvorny_propa": trueas, "calc_propa": calcas})
-# prop_a_df.to_csv("data/propa_calc.csv")
-# # %%
-# prop_a_df = pd.read_csv("data/propa_calc.csv")
-# import matplotlib.pyplot as plt
-# import matplotlib as mpl
-# from matplotlib.colors import LogNorm
-
-# cmap = mpl.cm.magma
-# norm = LogNorm(vmin=10)
-# # plt.hist2d(prop_a_df["nesvorny_propa"], prop_a_df["calc_propa"], bins=200, norm=norm, cmap=cmap)
-# plt.scatter(prop_a_df["nesvorny_propa"], prop_a_df["calc_propa"])
-
-# minval = min(prop_a_df["nesvorny_propa"].min(), prop_a_df["calc_propa"].min())
-# maxval = max(prop_a_df["nesvorny_propa"].max(), prop_a_df["calc_propa"].max())
-# plt.plot([minval, maxval], [minval, maxval], ls = 'dashed', linewidth=2, color = "grey")
-
-# plt.xlim(0, 5)
-# plt.ylim(0, 5)
-
-# plt.show()
-# # %%
+	for _ in tqdm(p.imap_unordered(propa_calc, model_results.iterrows()), total=len(model_results),
+		desc="Processing asteroids"
+	):
+		pass
