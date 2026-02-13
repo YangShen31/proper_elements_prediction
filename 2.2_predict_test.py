@@ -24,6 +24,11 @@ final_model_e.load_model("data/models/best_model_e_final.xgb")
 final_model_inc = xgb.XGBRegressor()
 final_model_inc.load_model("data/models/best_model_inc_final.xgb")
 # %%
+print("eccentricity feature weights")
+print(final_model_e.get_booster().get_score(importance_type='gain'))
+print("inclination feature weights")
+print(final_model_inc.get_booster().get_score(importance_type='gain'))
+# %%
 # Save all predicted values into a table for analysis
 pred_e = final_model_e.predict(testX_e)
 
