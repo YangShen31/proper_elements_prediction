@@ -17,7 +17,7 @@ delsini = merged_df['propsini']-np.sin(merged_df['Incl.']*np.pi/180)
 delg = merged_df['g0'] - merged_df['g']
 s = merged_df['s']
 
-trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, test_size=0.4, random_state=42)
+trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, train_size=0.8, random_state=42)
 # %%
 final_model_e = xgb.XGBRegressor()
 final_model_e.load_model("data/models/best_model_e_final.xgb")

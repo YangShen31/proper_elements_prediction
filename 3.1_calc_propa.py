@@ -1,4 +1,6 @@
 # %%
+import time
+import warnings
 from multiprocessing import Pool
 from pathlib import Path
 from tqdm import tqdm
@@ -10,7 +12,7 @@ import numpy as np
 import rebound as rb
 from celmech.nbody_simulation_utilities import get_simarchive_integration_results
 import assist
-from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements
+from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements, sun_sim
 # %%
 model_results = pd.read_csv("data/model_results.csv", index_col=0, dtype={"Des'n": str})
 
@@ -23,8 +25,6 @@ epoch = 2460200.5
 # %%
 num_to_run = len(model_results)
 # %%
-sun_sim = rb.Simulation()
-sun_sim.add("sun", plane="ecliptic", date="JD%f"%epoch)
 sun = sun_sim.particles[0]
 def propa_calc(r):
 	idx, row = r
@@ -48,7 +48,12 @@ def propa_calc(r):
 	ex = assist.Extras(sim, ephem)
 	sim.t = epoch - ephem.jd_ref
 	sim.ri_ias15.adaptive_mode = 2
-	sim.add(p)
+	
+    # We are doing the unit conversion ourself (using the conver variable)
+	with warnings.catch_warnings():
+		warnings.filterwarnings("ignore", message="Particle is being adding from a simulation that uses different units.")
+		sim.add(p)
+	
 	p = icrf_to_ecliptic(p)
 	orb = ecliptic_xyz_to_elements(p)
 	times = np.linspace(sim.t, 3e5 + sim.t, Nout)
@@ -68,9 +73,64 @@ def propa_calc(r):
 
 	return des
 
+<<<<<<< HEAD
 # %%
 with Pool(40) as p:
 	for _ in tqdm(p.imap_unordered(propa_calc, model_results.iterrows()), total=len(model_results),
 		desc="Processing asteroids"
 	):
 		pass
+=======
+r = propa_calc(next(model_results.iterrows()))
+r
+# %%
+def propa_calc_safe(row):
+	try:
+		return propa_calc(row)
+	except Exception as e:
+		print(e)
+		return None
+
+start = time.time()
+with Pool(40) as p:
+	raw_results = list(
+		tqdm(
+			p.imap(propa_calc_safe, islice(model_results.iterrows(), num_to_run)),
+			total=num_to_run
+		)
+	)
+end = time.time()
+print("Prop a Calc Time: %.2f seconds" % (end - start))
+results = [r for r in raw_results if r is not None]
+
+df_results = pd.DataFrame(results, columns=["Des'n", "propa_cal", "propa_nes"])
+df_results.to_csv("data/proper_a_integration_results_all.csv")
+# %%
+# calcas = np.array([x[1] for x in results])
+# trueas = np.array(model_results.head(num_to_run)["propa"])
+# desns = [x[0] for x in results]
+
+# print(np.mean((calcas - trueas)**2))
+# prop_a_df = pd.DataFrame({"Des'n": desns, "nesvorny_propa": trueas, "calc_propa": calcas})
+# prop_a_df.to_csv("data/propa_calc.csv")
+# # %%
+# prop_a_df = pd.read_csv("data/propa_calc.csv")
+# import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# from matplotlib.colors import LogNorm
+
+# cmap = mpl.cm.magma
+# norm = LogNorm(vmin=10)
+# # plt.hist2d(prop_a_df["nesvorny_propa"], prop_a_df["calc_propa"], bins=200, norm=norm, cmap=cmap)
+# plt.scatter(prop_a_df["nesvorny_propa"], prop_a_df["calc_propa"])
+
+# minval = min(prop_a_df["nesvorny_propa"].min(), prop_a_df["calc_propa"].min())
+# maxval = max(prop_a_df["nesvorny_propa"].max(), prop_a_df["calc_propa"].max())
+# plt.plot([minval, maxval], [minval, maxval], ls = 'dashed', linewidth=2, color = "grey")
+
+# plt.xlim(0, 5)
+# plt.ylim(0, 5)
+
+# plt.show()
+# # %%
+>>>>>>> e38366dba8254fce720e040283dec6d44fd36c6a
