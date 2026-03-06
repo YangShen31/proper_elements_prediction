@@ -13,23 +13,14 @@ from xgboost.sklearn import XGBRegressor
 nesvorny_df = pd.read_csv("data/nesvorny_catalog_dataset.csv", index_col=0, dtype={"Des'n": str})
 
 # Read linear prediction results
-prediction_path = Path("data/linear_predictions")
-file_names = list(prediction_path.glob("*.npz"))
-rows = []
-
-for i in range(len(file_names)):
-	soln_h = np.load(file_names[i])
-	prope_value = soln_h["u"]
-	propsini_value = soln_h["v"]
-	g0_value = soln_h["g"]
-	s0_value = soln_h["s"]
-	des_n = file_names[i].stem.replace("linear_prediction_results", "")
-	rows.append([des_n, np.abs(prope_value).item(), np.abs(propsini_value).item(), g0_value.item(), s0_value.item()])
-     
-df_h = pd.DataFrame(rows, columns=["Des'n", "prope_h", "propsini_h", "g0", "s0"])
+linear_theory_df = pd.read_csv("data/linear_theory.csv", index_col=0, dtype={"Des'n": str})
+linear_theory_df['u0'] = linear_theory_df['u0'].apply(lambda x: complex(x))
+linear_theory_df['v0'] = linear_theory_df['v0'].apply(lambda x: complex(x))
+linear_theory_df['prope_h'] = np.abs(linear_theory_df['u0'])
+linear_theory_df['propsini_h'] = np.abs(linear_theory_df['v0'])
 # %%
 # Get merged dataframe for later model training
-merged_df = pd.merge(nesvorny_df, df_h, on="Des'n", how="inner")
+merged_df = pd.merge(nesvorny_df, linear_theory_df, on="Des'n", how="inner")
 
 merged_df["prope_h"] = np.abs(merged_df["prope_h"])
 merged_df["propsini_h"] = np.abs(merged_df["propsini_h"])
@@ -53,8 +44,6 @@ data_e = merged_df[features_e]
 data_inc = merged_df[features_inc]
 dele = merged_df['prope']-merged_df['e']
 delsini = merged_df['propsini']-np.sin(merged_df['Incl.']*np.pi/180)
-delg = merged_df['g0'] - merged_df['g']
-s = merged_df['s']
 
 trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, train_size=0.8, random_state=42)
 
@@ -122,10 +111,11 @@ final_model_inc.save_model(str(pth_inc))
 # %%
 e_best_idx = grid_search2_e.best_index_
 e_score_mean = grid_search2_e.cv_results_["mean_test_score"][e_best_idx]
-e_score_std = 1.96 * grid_search2_e.cv_results_["std_test_score"][e_best_idx] / np.sqrt(5)
+e_score_std = grid_search2_e.cv_results_["std_test_score"][e_best_idx]
 print(f"Ecc score: {-e_score_mean:.5} ± {e_score_std:.5}")
 
 inc_best_idx = grid_search2_inc.best_index_
 inc_score_mean = grid_search2_inc.cv_results_["mean_test_score"][inc_best_idx]
-inc_score_std = 1.96 * grid_search2_inc.cv_results_["std_test_score"][inc_best_idx] / np.sqrt(5)
+inc_score_std = grid_search2_inc.cv_results_["std_test_score"][inc_best_idx]
 print(f"Inc score: {-inc_score_mean:.5} ± {inc_score_std:.5}")
+# %%
