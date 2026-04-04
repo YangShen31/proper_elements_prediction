@@ -37,6 +37,7 @@ pred_e = final_model_e.predict(testX_e)
 pred_inc = final_model_inc.predict(testX_inc)
 eval_t = time.process_time() - start_t
 print(f"Model Evaluation Time: {eval_t:.2f} sec for {len(testX_e)} asteroids. {eval_t/len(testX_e):.4} sec / asteroid")
+# Model Evaluation Time: 56.06 sec for 249811 asteroids. 0.0002244 sec / asteroid
 
 test_indices = testX_e.index.tolist()
 

@@ -38,10 +38,12 @@ def ecc_inc_prediction(r):
 	return row["Des'n"], u0, v0, g0, s0
 # %%
 start_t = time.process_time()
-with Pool(40) as p:
+ncpus = 40
+with Pool(ncpus) as p:
 	table = list(tqdm(p.imap(ecc_inc_prediction, nesvorny_df.iterrows()), total=len(nesvorny_df)))
-eval_t = time.process_time() - start_t
+eval_t = (time.process_time() - start_t) * ncpus
 print(f"Linear Theory Time: {eval_t:.2f} sec for {len(nesvorny_df)} asteroids. {eval_t/len(nesvorny_df):.4} sec / asteroid")
+# Linear Theory Time: 9531.33 sec for 1249051 asteroids. 0.007631 sec / asteroid
 # %%
 df = pd.DataFrame(table, columns=["Des'n", "u0", "v0", "g0", "s0"])
 df.to_csv("data/linear_theory.csv")
