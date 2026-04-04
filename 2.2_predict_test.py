@@ -1,4 +1,5 @@
 # %%
+import time
 import numpy as np
 import pandas as pd
 
@@ -30,9 +31,12 @@ print("inclination feature weights")
 print(final_model_inc.get_booster().get_score(importance_type='gain'))
 # %%
 # Save all predicted values into a table for analysis
+start_t = time.process_time()
 pred_e = final_model_e.predict(testX_e)
 
 pred_inc = final_model_inc.predict(testX_inc)
+eval_t = time.process_time() - start_t
+print(f"Model Evaluation Time: {eval_t:.2f} sec for {len(testX_e)} asteroids. {eval_t/len(testX_e):.4} sec / asteroid")
 
 test_indices = testX_e.index.tolist()
 

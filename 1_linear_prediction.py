@@ -1,4 +1,5 @@
 # %%
+import time
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -36,8 +37,11 @@ def ecc_inc_prediction(r):
 	# np.savez(prediction_path / f"linear_prediction_results_{row["Des'n"]}", u=u0, v=v0, g=g0, s=s0)
 	return row["Des'n"], u0, v0, g0, s0
 # %%
+start_t = time.process_time()
 with Pool(40) as p:
 	table = list(tqdm(p.imap(ecc_inc_prediction, nesvorny_df.iterrows()), total=len(nesvorny_df)))
+eval_t = time.process_time() - start_t
+print(f"Linear Theory Time: {eval_t:.2f} sec for {len(nesvorny_df)} asteroids. {eval_t/len(nesvorny_df):.4} sec / asteroid")
 # %%
 df = pd.DataFrame(table, columns=["Des'n", "u0", "v0", "g0", "s0"])
 df.to_csv("data/linear_theory.csv")
