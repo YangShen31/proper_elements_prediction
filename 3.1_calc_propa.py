@@ -67,40 +67,25 @@ def propa_calc(r):
 		p.vxyz = np.array(p.vxyz) / conver
 		p = ecliptic_to_icrf(p)
 		a[i] = orbit.a
-	np.savez(prediction_path / f"propa_prediction_results_{row["Des'n"]}", u = np.mean(a))
 
 	des = row["Des'n"]
 
-	return des
+	return des, np.mean(a), row["propa"]
 
-<<<<<<< HEAD
-# %%
-with Pool(40) as p:
-	for _ in tqdm(p.imap_unordered(propa_calc, model_results.iterrows()), total=len(model_results),
-		desc="Processing asteroids"
-	):
-		pass
-=======
 r = propa_calc(next(model_results.iterrows()))
 r
 # %%
-def propa_calc_safe(row):
-	try:
-		return propa_calc(row)
-	except Exception as e:
-		print(e)
-		return None
-
-start = time.time()
-with Pool(40) as p:
+start_t = time.process_time()
+ncpus = 40
+with Pool(ncpus) as p:
 	raw_results = list(
 		tqdm(
-			p.imap(propa_calc_safe, islice(model_results.iterrows(), num_to_run)),
+			p.imap(propa_calc, islice(model_results.iterrows(), num_to_run)),
 			total=num_to_run
 		)
 	)
-end = time.time()
-print("Prop a Calc Time: %.2f seconds" % (end - start))
+eval_t = (time.process_time() - start_t) * ncpus
+print(f"Linear Theory Time: {eval_t:.2f} sec for {len(model_results)} asteroids. {eval_t/len(model_results):.4} sec / asteroid")
 results = [r for r in raw_results if r is not None]
 
 df_results = pd.DataFrame(results, columns=["Des'n", "propa_cal", "propa_nes"])
@@ -133,4 +118,3 @@ df_results.to_csv("data/proper_a_integration_results_all.csv")
 
 # plt.show()
 # # %%
->>>>>>> e38366dba8254fce720e040283dec6d44fd36c6a
