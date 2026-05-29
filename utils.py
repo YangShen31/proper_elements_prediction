@@ -5,7 +5,7 @@ import numpy as np
 EARTH_OBLIQUITY = 23.43929111 * np.pi / 180.0
 epoch = 2460200.5
 SUN_GM = 0.295912208285591100e-3
-UNIT_CONVER = 58.132440867049
+UNIT_CONVER = 365.25/(2 * np.pi)
 
 sun_sim = rb.Simulation()
 sun_sim.add("sun", plane="ecliptic", date="JD%f"%epoch)
