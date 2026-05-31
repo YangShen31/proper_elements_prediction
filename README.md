@@ -22,5 +22,3 @@ Download family tables from [ast.nesvorny.families_V2_0/data/families_2024](http
 
 ### Observational Uncertainty Evaluation
 Download the ASSIST ephemeris files and place them in `data/assist` as described [here](https://assist.readthedocs.io/en/latest/jupyter_examples/GettingStarted/).
-
-`SBDynT` includes files stored with GIT LFS which may not be automatically downloaded when the submodule is initialized depending on your setup. To see whether it worked look at `5_uncertainty_testing/SBDynT/src/MLdata/G08_TNO_training_testing_set.pkl`. If it is a text file with only a few lines of content you need to install git lfs and run `git lfs pull` to download the required files.
