@@ -1,4 +1,7 @@
-# Proper Element Prediction
+# A machine learning model to predict proper orbital elements for main-belt asteroid family classification
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20693708.svg)](https://doi.org/10.5281/zenodo.20693708)
+
+Arxiv release coming soon!
 
 ## Setup
 
@@ -7,13 +10,13 @@ In a new virtual environment, install the required libraries as specified in `re
 #### If you want to use the pretrained models:
 First, download `merged_elements.csv` (this contains linear predictions for all asteroids) and place it in `data/`. Second, download the pre-trained `*.xgb` files on Zenodo [10.5281/zenodo.20693708](https://doi.org/10.5281/zenodo.20693708), and place them in `data/models`.
 
-#### If you want to train new models from scratch:
-
-Download `MPCORB.DAT.gz` and `proper_catalog24.dat.gz` from [boulder.swri.edu/~davidn/Proper24](https://www2.boulder.swri.edu/~davidn/Proper24/) and place the uncompressed files in `data/`.
-
 #### If you want to identify asteroid families:
 
 Download family tables from [ast.nesvorny.families_V2_0/data/families_2024](https://sbnarchive.psi.edu/pds4/non_mission/ast.nesvorny.families_V2_0/data/families_2024/) into `data/family_tables` and $d$ threshold tables 3 to 7 from from [Nesvorny24](https://iopscience.iop.org/article/10.3847/1538-4365/ad675c) into `data/family_d_vals`.
+
+#### If you want to train new models from scratch:
+
+Download `MPCORB.DAT.gz` and `proper_catalog24.dat.gz` from [boulder.swri.edu/~davidn/Proper24](https://www2.boulder.swri.edu/~davidn/Proper24/) and place the uncompressed files in `data/`.
 
 ## Analyze New Asteroids
 
