@@ -5,7 +5,7 @@
 In a new virtual environment, install the required libraries as specified in `requirements.txt`. We used python 3.12, but it should work with other versions.
 
 #### If you want to use the pretrained models:
-First, download `merged_elements.csv` (this contains linear predictions for all asteroids) and place it in `data/`. Second, download the pre-trained `*.xgb` files on Zenodo 10.[5281/zenodo.20693708](https://doi.org/10.5281/zenodo.20693708), and place them in `data/models`.
+First, download `merged_elements.csv` (this contains linear predictions for all asteroids) and place it in `data/`. Second, download the pre-trained `*.xgb` files on Zenodo [10.5281/zenodo.20693708](https://doi.org/10.5281/zenodo.20693708), and place them in `data/models`.
 
 #### If you want to train new models from scratch:
 
