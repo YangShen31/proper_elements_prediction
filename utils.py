@@ -1,11 +1,10 @@
 import rebound as rb
 import numpy as np
 
-# J2000.0 obliquity in radians
-EARTH_OBLIQUITY = 23.43929111 * np.pi / 180.0
-epoch = 2460200.5
-SUN_GM = 0.295912208285591100e-3
-UNIT_CONVER = 365.25/(2 * np.pi)
+EARTH_OBLIQUITY = 23.43929111 * np.pi / 180.0 # J2000.0 obliquity in radians
+epoch = 2460200.5 # nesvorny epoch
+SUN_GM = 0.295912208285591100e-3 # gravitation constant times the sun's mass
+UNIT_CONVER = 365.2568983263 / (2 * np.pi) # days in year / (2 * pi)
 
 sun_sim = rb.Simulation()
 sun_sim.add("sun", plane="ecliptic", date="JD%f"%epoch)
@@ -32,8 +31,11 @@ def icrf_to_ecliptic(p: rb.Particle):
     p.vxyz = np.array(p.vxyz) @ BWD_ROTATION_MATRIX
     return p
 
-def ecliptic_xyz_to_elements(p):
+def ecliptic_xyz_to_elements(p: rb.Particle):
     '''
     Particle mass should be in units where the GM for the sun is 1, AU, and yr
     '''
+    # tmp = sun_sim.copy()
+    # tmp.add(p.copy())
+    # return tmp.particles[1].orbit(tmp.particles[0], G=1)
     return p.orbit(primary=sun_sim.particles[0], G=1)
