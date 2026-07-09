@@ -30,8 +30,8 @@ merged_df['Node'] = pd.to_numeric(merged_df['Node'], errors='coerce')
 merged_df['Peri.'] = pd.to_numeric(merged_df['Peri.'], errors='coerce')
 merged_df['ecospo'] = merged_df['prope_h']*np.cos((merged_df['Node']+merged_df['Peri.'])*np.pi/180)
 merged_df['esinpo'] = merged_df['prope_h']*np.sin((merged_df['Node']+merged_df['Peri.'])*np.pi/180)
-merged_df['sinicosO'] = np.sin(merged_df['propsini_h']*np.pi/180)*np.cos(merged_df['Node']*np.pi/180)
-merged_df['sinisinO'] = np.sin(merged_df['propsini_h']*np.pi/180)*np.sin(merged_df['Node']*np.pi/180)
+merged_df['sinicosO'] = np.sin(merged_df['propsini_h'])*np.cos(merged_df['Node']*np.pi/180)
+merged_df['sinisinO'] = np.sin(merged_df['propsini_h'])*np.sin(merged_df['Node']*np.pi/180)
 
 merged_df.to_csv("data/merged_elements.csv")
 # %%
