@@ -57,7 +57,7 @@ df_xgb["M"] = test_data["M"]
 
 # linear
 df_xgb["prope_h"] = test_data["prope_h"]
-df_xgb["propsini_h"] = np.sin(test_data["propsini_h"])
+df_xgb["propsini_h"] = test_data["propsini_h"]
 
 # predicted
 pred_e = df_xgb["pred_dele"] + df_xgb["e"]
