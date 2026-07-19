@@ -144,10 +144,9 @@ axs[1].scatter(times[fragment_idx1]/(np.pi*2), np.ones(len(fragment_idx1))*row1[
 # %%
 from matplotlib.patches import ConnectionPatch
 i = 6
-fig, axs = plt.subplots(2, 2, sharex=True, sharey='row', figsize=(10,2.5), gridspec_kw={'height_ratios':[1,3]})
+fig, axs = plt.subplots(2, 2, sharex=True, sharey='row', figsize=(10,2.5), gridspec_kw={'height_ratios':[1,3], 'hspace':0})
 
-# fig.subplots_adjust(hspace=0.01)
-fig.subplots_adjust(hspace=0.0)
+fig.subplots_adjust(hspace=0.01)
 
 ### LEFT ###
 
@@ -177,8 +176,8 @@ axs[0][0].set_ylabel("Prop.\nEcc.")
 #### PARENT ASTEROID ####
 
 # axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', s=5, zorder=10, label='Parent')
-axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', edgecolors='black' , s=50, lw=2, zorder=10, label='Parent')
-axs[0][0].scatter(times[fragment_idx[5]]/(np.pi*2), row['prope'], color='white', edgecolors='black' , s=50, lw=2, zorder=10, label='Parent')
+axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
+axs[0][0].scatter(times[fragment_idx[5]]/(np.pi*2), row['prope'], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
 axs[1][0].legend(ncols=2, columnspacing=0.8, handletextpad=0.0)
 
 ### RIGHT ###
