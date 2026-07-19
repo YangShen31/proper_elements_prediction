@@ -128,17 +128,84 @@ axs[1].axhline(row['prope'], c='tab:blue', zorder=-1)
 axs[1].set_title("Proper Eccentricity")
 axs[1].scatter(times[fragment_idx]/(np.pi*2), np.ones(len(fragment_idx))*row['prope'], c='black')
 
-fragment_idx_base = [375]
-fragment_idx = fragment_idx_base
+fragment_idx_base1 = [375]
+fragment_idx1 = fragment_idx_base1
 # fragment_idx_rand = np.random.rand(10)
-fragment_idx_rand = np.array([0.65264815, 0.71442867, 0.91297066, 0.45948945, 0.97008024,
+fragment_idx_rand1 = np.array([0.65264815, 0.71442867, 0.91297066, 0.45948945, 0.97008024,
        0.3226722 , 0.49777986, 0.92008058, 0.18583027, 0.70138386])
-fragment_idx = (fragment_idx_base[0] + 500 * (fragment_idx_rand - 0.5)).astype(int) % 499
+fragment_idx1 = (fragment_idx_base1[0] + 500 * (fragment_idx_rand1 - 0.5)).astype(int) % 499
 
 
 axs[0].plot(times/(np.pi*2), e1, zorder=-1, c='tab:orange')
-axs[0].scatter(times[fragment_idx]/(np.pi*2), e1[fragment_idx], c='black')
+axs[0].scatter(times[fragment_idx1]/(np.pi*2), e1[fragment_idx1], c='black')
 
 axs[1].axhline(row1['prope'], c='tab:orange', zorder=-1)
-axs[1].scatter(times[fragment_idx]/(np.pi*2), np.ones(len(fragment_idx))*row1['prope'], c='black')
+axs[1].scatter(times[fragment_idx1]/(np.pi*2), np.ones(len(fragment_idx1))*row1['prope'], c='black')
+# %%
+from matplotlib.patches import ConnectionPatch
+i = 6
+fig, axs = plt.subplots(2, 2, sharex=True, sharey='row', figsize=(10,2.5), gridspec_kw={'height_ratios':[1,3]})
+
+# fig.subplots_adjust(hspace=0.01)
+fig.subplots_adjust(hspace=0.0)
+
+### LEFT ###
+
+for idx in range(i):
+    t = (times[fragment_idx[idx]]/(np.pi*2), row['prope'] - 0.006)
+    b = (times[fragment_idx[idx]]/(np.pi*2), e[fragment_idx[idx]])
+    con = ConnectionPatch(xyA=b, xyB=t, coordsA="data", coordsB="data",
+                          axesA=axs[1][0], axesB=axs[0][0],
+                          zorder=1, color="gray", linestyle="--")
+    axs[1][0].add_artist(con)
+
+axs[1][0].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue')
+axs[1][0].scatter(times[fragment_idx[:i]]/(np.pi*2), e[fragment_idx[:i]], c='black', zorder=2, label='Fragment')
+
+axs[0][0].axhline(row['prope'], c='tab:blue', zorder=-1)
+axs[0][0].scatter(times[fragment_idx[:i]]/(np.pi*2), np.ones(len(fragment_idx[:i]))*row['prope'], c='black', zorder=2, label='Fragment')
+
+axs[0][0].set_ylim(0.13, 0.17)
+axs[0][0].set_xlim(0, np.max(times/(np.pi*2)))
+
+axs[1][0].set_xlabel("Phase")
+
+axs[1][0].set_ylabel("Ecc.")
+
+axs[0][0].set_ylabel("Prop.\nEcc.")
+
+#### PARENT ASTEROID ####
+
+# axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', s=5, zorder=10, label='Parent')
+axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', edgecolors='black' , s=50, lw=2, zorder=10, label='Parent')
+axs[0][0].scatter(times[fragment_idx[5]]/(np.pi*2), row['prope'], color='white', edgecolors='black' , s=50, lw=2, zorder=10, label='Parent')
+axs[1][0].legend(ncols=2, columnspacing=0.8, handletextpad=0.0)
+
+### RIGHT ###
+
+axs[1][1].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue', alpha=0.3, label='Fam. 1')
+axs[1][1].scatter(times[fragment_idx[:i]]/(np.pi*2), e[fragment_idx[:i]], c='black')
+
+axs[1][1].plot(times/(np.pi*2), e1, zorder=-1, c='tab:orange', alpha=0.3, label='Fam. 2')
+axs[1][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), e1[fragment_idx1[:i]], c='black')
+
+
+axs[0][1].axhline(row['prope'], c='tab:blue', zorder=-1)
+axs[0][1].scatter(times[fragment_idx[:i]]/(np.pi*2), np.ones(len(fragment_idx[:i]))*row['prope'], c='black')
+
+axs[0][1].axhline(row1['prope'], c='tab:orange', zorder=-1)
+axs[0][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), np.ones(len(fragment_idx1[:i]))*row1['prope'], c='black')
+
+axs[1][1].set_xlabel("Phase")
+
+axs[0][1].set_xticks([])
+# axs[1][1].set_yticks([])
+# axs[0][1].set_yticks([])
+
+leg = axs[1][1].legend(ncols=2, loc="upper center", columnspacing=0.8)
+for lh in leg.legend_handles: 
+    lh.set_alpha(1)
+
+plt.tight_layout()
+plt.savefig("plots/proper_elements_explanation.pdf")
 # %%
