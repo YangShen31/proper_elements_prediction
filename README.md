@@ -5,14 +5,14 @@ Arxiv release coming soon!
 
 ## Setup
 
-In a new virtual environment (eg `python -m venv .venv`), install the required libraries as specified in `requirements.txt`. We used python 3.12, but it should work with other versions.
+In a new virtual environment (eg `python -m venv .venv`), install the required libraries as specified in `requirements.txt`. We used python 3.12, but it should work with other versions. See the [xgboost documentation](https://xgboost.readthedocs.io/en/stable/install.html) for OS specific instructions if you run into errors.
 
 #### If you want to use the pretrained models:
 First, download `merged_elements.csv` (this contains linear predictions for all asteroids) and place it in `data/`. Second, download the pre-trained `*.xgb` files on Zenodo [10.5281/zenodo.20693708](https://doi.org/10.5281/zenodo.20693708), and place them in `data/models`.
 
 #### If you want to identify asteroid families:
 
-Download family tables from [ast.nesvorny.families_V2_0/data/families_2024](https://sbnarchive.psi.edu/pds4/non_mission/ast.nesvorny.families_V2_0/data/families_2024/) into `data/family_tables` and $d$ threshold tables 3 to 7 from from [Nesvorny24](https://iopscience.iop.org/article/10.3847/1538-4365/ad675c) into `data/family_d_vals`.
+Download family tables from [https://ast.nesvorny.families_V2_0/data/families_2024](https://sbnarchive.psi.edu/pds4/non_mission/ast.nesvorny.families_V2_0/data/families_2024/) into `data/family_tables` and $d$ threshold tables 3 to 7 from from [Nesvorny'24](https://iopscience.iop.org/article/10.3847/1538-4365/ad675c) into `data/family_d_vals`. We also provide copies of these on Zenodo.
 
 #### If you want to train new models from scratch:
 
@@ -20,13 +20,13 @@ Download `MPCORB.DAT.gz` and `proper_catalog24.dat.gz` from [boulder.swri.edu/~d
 
 ## Analyze New Asteroids
 
-First, make sure you have downloaded all of the files required for using the pretrained models and identifying asteroid families.
+This is the most common use case of this repository, and doesn't require training any new models. First, make sure you have downloaded all of the files required for using the pretrained models and identifying asteroid families.
 
 Second, download the ASSIST ephemeris files and place them in `data/assist` as described [here](https://assist.readthedocs.io/en/latest/jupyter_examples/GettingStarted/). This is needed for the ephemeris integration we use to find the osculating elements of your body at JD2460200.5 (when the Nesvorny'24 dataset was gathered).
 
 Now you are ready to run `full_pipeline.ipynb` which includes examples for how to predict orbital elements for asteroids in NASA horizon's database and with custom provided osculating elements. We are updating it to include an N-Body calculation of proper elements using [SBDynT](https://arxiv.org/pdf/2603.27099).
 
-## Re-create Results from our Paper
+## Re-create Results from the Paper
 
 #### Model Training
 
