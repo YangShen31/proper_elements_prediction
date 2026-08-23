@@ -63,6 +63,7 @@ param2_grid = {
     'n_estimators': [900, 1200, 1500, 2000, 2500]
 }
 # %%
+# COMMENT OUT THIS SECTION TO SKIP HYPERPARAMETER TUNING
 start = time.time()
 grid_search1_e = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
                            param_grid=param1_grid, cv=5, scoring="neg_mean_squared_error", verbose=1)
@@ -82,8 +83,10 @@ print("Optimization Time: %.2f seconds" % (end - start))
 # %%
 # final_model_e = grid_search2_e.best_estimator_
 
-# e_best_params = {'colsample_bytree': np.float64(1.0), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2500}
+# COMMENT OUT TO SKIP HYPERPARAMETER TUNING
 final_model_e = XGBRegressor(**{**grid_search1_e.best_params_, **grid_search2_e.best_params_}, n_jobs=40)
+# UNCOMMENT TO USE OUR FOUND OPTIMAL HYPERPARAMETERS
+# e_best_params = {'colsample_bytree': np.float64(1.0), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2500}
 # final_model_e = XGBRegressor(**e_best_params, n_jobs=40)
 
 final_model_e.fit(trainX_e, trainY_e)
@@ -93,6 +96,7 @@ final_model_e.fit(trainX_e, trainY_e)
 pth_e = Path("data/models/best_model_e_final.xgb")
 final_model_e.save_model(str(pth_e))
 # %%
+# COMMENT OUT THIS SECTION TO SKIP HYPERPARAMETER TUNING
 start = time.time()
 grid_search1_inc = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_rate=0.3, n_estimators=500, n_jobs=40),
                            param_grid=param1_grid, cv=5, scoring="neg_mean_squared_error", verbose=1)
@@ -111,8 +115,10 @@ print("Optimization Time: %.2f seconds" % (end - start))
 # %%
 # final_model_inc = grid_search2_inc.best_estimator_
 
-# inc_best_params = {'colsample_bytree': np.float64(0.9), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2000}
+# COMMENT OUT TO SKIP HYPERPARAMETER TUNING
 final_model_inc = XGBRegressor(**{**grid_search1_inc.best_params_, **grid_search2_inc.best_params_}, n_jobs=40)
+# UNCOMMENT TO USE OUR FOUND OPTIMAL HYPERPARAMETERS
+# inc_best_params = {'colsample_bytree': np.float64(0.9), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2000}
 # final_model_inc = XGBRegressor(**inc_best_params, n_jobs=40)
 
 final_model_inc.fit(trainX_inc, trainY_inc)

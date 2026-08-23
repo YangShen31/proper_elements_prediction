@@ -20,7 +20,7 @@ Download `MPCORB.DAT.gz` and `proper_catalog24.dat.gz` from [boulder.swri.edu/~d
 
 ## Analyze New Asteroids
 
-This is the most common use case of this repository, and doesn't require training any new models. First, make sure you have downloaded all of the files required for using the pretrained models and identifying asteroid families.
+This is the most common use case of this repository, and doesn't require training any new models. First, make sure you have downloaded all of the files required for *using the pretrained models* and *identifying asteroid families*.
 
 Second, download the ASSIST ephemeris files and place them in `data/assist` as described [here](https://assist.readthedocs.io/en/latest/jupyter_examples/GettingStarted/). This is needed for the ephemeris integration we use to find the osculating elements of your body at JD2460200.5 (when the Nesvorny'24 dataset was gathered).
 
@@ -30,11 +30,12 @@ Now you are ready to run `full_pipeline.ipynb` which includes examples for how t
 
 #### Model Training
 
-To train eccentricity and inclination models from scratch run `1_linear_prediction.py` and `2_train_models.py`
+To train eccentricity and inclination models from scratch run `1_linear_prediction.py`, `2.1_train_xgboost.py`, and `2.2_predict_test.py`. 
+The most time consuming part is hyperparameter tuning which takes ~9.5 hours (everything else takes just a few minutes). To skip hyperparameter tuning and use our found optimal hyperparamters comment out the marked lines in `2.1_train_xgboost.py`.
 
 #### Model Evaluation
 
-The jupyter notebook `3_evaluate_models.ipynb` contains code to create most of the plots in the paper. Uncertainty testing and family identification code are in their respective folders as they require a bit more processing.
+The jupyter notebook `3_evaluate_models.ipynb` contains code to create most of the plots in the paper. Family identification code is in its own folder as it requires a bit more processing.
 
 #### Family Identification Evaluation
 
