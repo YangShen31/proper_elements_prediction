@@ -69,7 +69,6 @@ grid_search1_e = GridSearchCV(estimator=XGBRegressor(random_state=42, learning_r
                            param_grid=param1_grid, cv=5, scoring="neg_mean_squared_error", verbose=1)
 
 grid_search1_e.fit(trainX_e, trainY_e)
-print(grid_search1_e.best_params_)
 
 grid_search2_e = GridSearchCV(estimator=XGBRegressor(random_state=42, **grid_search1_e.best_params_, n_jobs=40),
                            param_grid=param2_grid, cv=5, scoring="neg_mean_squared_error", verbose=1)

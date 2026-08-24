@@ -9,8 +9,8 @@ from sklearn.model_selection import train_test_split
 # %%
 merged_df = pd.read_csv("data/merged_elements.csv", index_col=0, dtype={"Des'n": str})
 
-features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'g0', 'prope_h']
-features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 's0', 'propsini_h']
+features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'prope_h']
+features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'propsini_h']
 data_e = merged_df[features_e]
 data_inc = merged_df[features_inc]
 dele = merged_df['prope']-merged_df['e']
@@ -25,9 +25,9 @@ final_model_e.load_model("data/models/best_model_e_final.xgb")
 final_model_inc = xgb.XGBRegressor()
 final_model_inc.load_model("data/models/best_model_inc_final.xgb")
 # %%
-print("eccentricity feature weights")
+print("eccentricity feature information gain")
 print(final_model_e.get_booster().get_score(importance_type='gain'))
-print("inclination feature weights")
+print("inclination feature information gain")
 print(final_model_inc.get_booster().get_score(importance_type='gain'))
 # %%
 # Save all predicted values into a table for analysis
