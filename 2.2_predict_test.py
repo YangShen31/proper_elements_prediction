@@ -4,21 +4,17 @@ import numpy as np
 import pandas as pd
 
 import xgboost as xgb
-
-from sklearn.model_selection import train_test_split
 # %%
 merged_df = pd.read_csv("data/merged_elements.csv", index_col=0, dtype={"Des'n": str})
 
-features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'prope_h']
-features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'propsini_h']
-data_e = merged_df[features_e]
-data_inc = merged_df[features_inc]
-dele = merged_df['prope']-merged_df['e']
-delsini = merged_df['propsini']-np.sin(merged_df['Incl.']*np.pi/180)
-delg = merged_df['g0'] - merged_df['g']
-s = merged_df['s']
+features_e = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'prope_linear']
+features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'propsini_linear']
 
-trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, train_size=0.8, random_state=42)
+merged_df_test = merged_df[merged_df["test_set"] == 1]
+testX_e = merged_df_test[features_e]
+testY_e = merged_df_test['prope']-merged_df_test['e'] # dele
+testX_inc = merged_df_test[features_inc]
+testY_inc = merged_df_test['propsini']-np.sin(np.deg2rad(merged_df_test["Incl."])) # delsini
 # %%
 final_model_e = xgb.XGBRegressor()
 final_model_e.load_model("data/models/best_model_e_final.xgb")
@@ -37,7 +33,7 @@ pred_e = final_model_e.predict(testX_e)
 pred_inc = final_model_inc.predict(testX_inc)
 eval_t = time.process_time() - start_t
 print(f"Model Evaluation Time: {eval_t:.2f} sec for {len(testX_e)} asteroids. {eval_t/len(testX_e):.4} sec / asteroid")
-# Model Evaluation Time: 56.06 sec for 249811 asteroids. 0.0002244 sec / asteroid
+# Model Evaluation Time: 47.05 sec for 249811 asteroids. 0.0001883 sec / asteroid
 
 test_indices = testX_e.index.tolist()
 
@@ -53,18 +49,17 @@ df_xgb["a"] = test_data["a"]
 df_xgb["Incl."] = test_data["Incl."]
 df_xgb["Node"] = test_data["Node"]
 df_xgb["Peri."] = test_data["Peri."]
-df_xgb["M"] = test_data["M"]
 
 # linear
-df_xgb["prope_h"] = test_data["prope_h"]
-df_xgb["propsini_h"] = test_data["propsini_h"]
+df_xgb["prope_linear"] = test_data["prope_linear"]
+df_xgb["propsini_linear"] = test_data["propsini_linear"]
 
 # predicted
 pred_e = df_xgb["pred_dele"] + df_xgb["e"]
 pred_e[pred_e < 0] = 0 # clamp values less than 0
 df_xgb["pred_e"] = pred_e
 
-pred_sini = df_xgb["pred_delsini"] + np.sin((df_xgb["Incl."] * np.pi/180))
+pred_sini = df_xgb["pred_delsini"] + np.sin((np.deg2rad(df_xgb["Incl."])))
 df_xgb["pred_sini"] = pred_sini
 
 # acutal
