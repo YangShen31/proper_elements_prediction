@@ -81,14 +81,8 @@ def ecc_inc_prediction(r):
 	# Calculate linear theory
 	u0, v0, g0, s0 = linear_theory_prediction(orb.e, orb.inc, orb.pomega, orb.Omega, orb.a, simpler_secular_theory)
 
-	# rotate the proper elements back into the original frame
-	sim.particles[-1].e = np.clip(np.abs(u0), 0, 0.99)
-	sim.particles[-1].inc = np.abs(v0)
-	sim.rotate(rot.inverse())
-	p = sim.particles[-1]
-	orb2 = p.orbit(primary=sim.particles[0])
-
-	return row["Des'n"], u0, v0, g0, s0, orb.e, orb.inc
+	# From now on, we will use the invariable frame elements as the oscullating elements
+	return row["Des'n"], u0, v0, g0, s0, orb.a, orb.e, np.degrees(orb.inc), np.degrees(orb.Omega), np.degrees(orb.pomega)
 # %%
 start_t = time.process_time()
 ncpus = 40
@@ -96,10 +90,10 @@ with Pool(ncpus) as p:
 	table = list(tqdm(p.imap(ecc_inc_prediction, nesvorny_df.iterrows()), total=len(nesvorny_df)))
 eval_t = (time.process_time() - start_t) * ncpus
 print(f"Linear Theory Time: {eval_t:.2f} sec for {len(nesvorny_df)} asteroids. {eval_t/len(nesvorny_df):.4} sec / asteroid")
-# Linear Theory Time: 12229.41 sec for 1249051 asteroids. 0.009791 sec / asteroid
+# Linear Theory Time: 11992.52 sec for 1249051 asteroids. 0.009601 sec / asteroid
 # %%
 # u0,v0 are the complex proper elements in the invariable frame
 # g0,s0 are the proper frequencies
 # prope_linear, propi_linear are the proper elements in the original frame
-df_all = pd.DataFrame(table, columns=["Des'n", "u0", "v0", "g0", "s0", "prope_linear", "propi_linear"])
+df_all = pd.DataFrame(table, columns=["Des'n", "u0", "v0", "g0", "s0", "a", "e", "Incl.", "Node", "Peri."])
 df_all.to_csv("data/linear_theory.csv")

@@ -21,26 +21,26 @@ linear_theory_df = pd.read_csv("data/linear_theory.csv", index_col=0, dtype={"De
 linear_theory_df['u0'] = linear_theory_df['u0'].apply(lambda x: complex(x))
 linear_theory_df['v0'] = linear_theory_df['v0'].apply(lambda x: complex(x))
 # calculate linear elements
-linear_theory_df['propsini_linear'] = np.sin(linear_theory_df["propi_linear"])
+linear_theory_df['prope_linear'] = np.abs(linear_theory_df['u0'])
+linear_theory_df['propsini_linear'] = np.abs(linear_theory_df['v0'])
 # rename linear frequencies
 linear_theory_df['g_linear'] = linear_theory_df['g0']
 linear_theory_df['s_linear'] = linear_theory_df['s0']
 # %%
 # Get merged dataframe for later model training
 merged_df = pd.merge(nesvorny_df[["Des'n", "propa", "da", "prope", "de", "propsini", "dsini", "g", "s"]],
-                     # get proper elements from the nesvorny'24 data set
+                     # get proper & osculating elements from the nesvorny'24 data set
                      linear_theory_df[["Des'n", "prope_linear", "propsini_linear", "g_linear", "s_linear",
                                        "a", "e", "Incl.", "Node", "Peri."]],
-                     # and linear & oscullating (in the invariable frame) elements from the linear theory file
+                     # and linear elements from the linear theory file
                      on="Des'n", how="inner")
-
 
 node = np.deg2rad(merged_df["Node"])
 peri = np.deg2rad(merged_df["Peri."])
 inc = np.deg2rad(merged_df["Incl."])
 
-merged_df["ecospo"] = merged_df["e"] * np.cos(node + peri)
-merged_df["esinpo"] = merged_df["e"] * np.sin(node + peri)
+merged_df["ecospo"] = merged_df["prope_linear"] * np.cos(node + peri)
+merged_df["esinpo"] = merged_df["propsini_linear"] * np.sin(node + peri)
 merged_df["sinicosO"] = np.sin(inc) * np.cos(node)
 merged_df["sinisinO"] = np.sin(inc) * np.sin(node)
 
