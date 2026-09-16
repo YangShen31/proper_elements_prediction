@@ -40,9 +40,9 @@ peri = np.deg2rad(merged_df["Peri."])
 inc = np.deg2rad(merged_df["Incl."])
 
 merged_df["ecospo"] = merged_df["prope_linear"] * np.cos(node + peri)
-merged_df["esinpo"] = merged_df["propsini_linear"] * np.sin(node + peri)
-merged_df["sinicosO"] = np.sin(inc) * np.cos(node)
-merged_df["sinisinO"] = np.sin(inc) * np.sin(node)
+merged_df["esinpo"] = merged_df["prope_linear"] * np.sin(node + peri)
+merged_df["sinicosO"] = merged_df["propsini_linear"] * np.cos(node)
+merged_df["sinisinO"] = merged_df["propsini_linear"] * np.sin(node)
 
 merged_df.to_csv("data/merged_elements.csv")
 # %%
@@ -55,7 +55,7 @@ features_inc = ['sinicosO', 'sinisinO', 'ecospo', 'esinpo', 'a', 'propsini_linea
 data_e = merged_df[features_e]
 data_inc = merged_df[features_inc]
 dele = merged_df['prope']-merged_df['e']
-delsini = merged_df['propsini']-np.sin(merged_df['Incl.']*np.pi/180)
+delsini = merged_df['propsini']-np.sin(inc)
 
 trainX_e, testX_e, trainX_inc, testX_inc, trainY_e, testY_e, trainY_inc, testY_inc = train_test_split(data_e, data_inc, dele, delsini, train_size=0.8, random_state=42)
 
@@ -127,7 +127,7 @@ print("Optimization Time: %.2f seconds" % (end - start))
 # COMMENT OUT TO SKIP HYPERPARAMETER TUNING
 final_model_inc = XGBRegressor(**{**grid_search1_inc.best_params_, **grid_search2_inc.best_params_}, n_jobs=40)
 # UNCOMMENT TO USE OUR FOUND OPTIMAL HYPERPARAMETERS
-# inc_best_params = {'colsample_bytree': np.float64(0.9), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2000}
+# inc_best_params = {'colsample_bytree': np.float64(1.0), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 1500}
 # final_model_inc = XGBRegressor(**inc_best_params, n_jobs=40)
 
 final_model_inc.fit(trainX_inc, trainY_inc)
