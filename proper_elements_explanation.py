@@ -93,6 +93,15 @@ axs[1].scatter(times[fragment_idx]/(np.pi*2), np.ones(len(fragment_idx))*row['pr
 # %%
 row1 = nesvorny_data[nesvorny_data["Des'n"] == des[0]].iloc[0]
 e1, times = get_e(row1)
+# min_d = 1
+# min_i = 0
+# for i in range(-58,58):
+#     e2 = np.roll(e1, i)
+#     if np.abs(e2[0] - e2[442]) < min_d:
+#         min_d = np.abs(e2[0] - e2[442])
+#         min_i = i
+#         print(min_d, i)
+e1 = np.roll(e1, -29) # hack to shift e1 so that it starts and ends at the same value on the plot
 
 fig, axs = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(6,2))
 
@@ -144,6 +153,7 @@ axs[1].scatter(times[fragment_idx1]/(np.pi*2), np.ones(len(fragment_idx1))*row1[
 # %%
 from matplotlib.patches import ConnectionPatch
 i = 6
+downsample = 2
 fig, axs = plt.subplots(2, 2, sharex=True, sharey='row', figsize=(10,2.5), gridspec_kw={'height_ratios':[1,3], 'hspace':0})
 
 fig.subplots_adjust(hspace=0.01)
@@ -158,14 +168,14 @@ for idx in range(i):
                           zorder=1, color="gray", linestyle="--")
     axs[1][0].add_artist(con)
 
-axs[1][0].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue')
-axs[1][0].scatter(times[fragment_idx[:i]]/(np.pi*2), e[fragment_idx[:i]], c='black', zorder=2, label='Fragment')
+axs[1][0].plot(times[::downsample]/(np.pi*2), e[::downsample], zorder=-1, c='tab:blue')
+axs[1][0].scatter(times[fragment_idx[:i]]/(np.pi*2), e[(fragment_idx[:i]//downsample)*downsample], c='black', zorder=2, label='Fragment')
 
 axs[0][0].axhline(row['prope'], c='tab:blue', zorder=-1)
 axs[0][0].scatter(times[fragment_idx[:i]]/(np.pi*2), np.ones(len(fragment_idx[:i]))*row['prope'], c='black', zorder=2, label='Fragment')
 
 axs[0][0].set_ylim(0.13, 0.17)
-axs[0][0].set_xlim(0, np.max(times/(np.pi*2)))
+axs[0][0].set_xlim(0, times[442]/(np.pi*2))
 
 axs[1][0].set_xlabel("Phase")
 
@@ -176,23 +186,23 @@ axs[0][0].set_ylabel("Prop.\nEcc.")
 #### PARENT ASTEROID ####
 
 # axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', s=5, zorder=10, label='Parent')
-axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
-axs[0][0].scatter(times[fragment_idx[5]]/(np.pi*2), row['prope'], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
-axs[1][0].legend(ncols=2, columnspacing=0.8, handletextpad=0.0)
+# axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
+# axs[0][0].scatter(times[fragment_idx[5]]/(np.pi*2), row['prope'], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
+# axs[1][0].legend(ncols=2, columnspacing=0.8, handletextpad=0.0)
 
 ### RIGHT ###
+axs[1][1].plot(times[::downsample]/(np.pi*2), e[::downsample], zorder=-1, c='tab:blue', alpha=0.7, label='Fam. 1')
+axs[1][1].scatter(times[fragment_idx[:i]]/(np.pi*2), e[(fragment_idx[:i]//downsample)*downsample], c='black')
 
-axs[1][1].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue', alpha=0.3, label='Fam. 1')
-axs[1][1].scatter(times[fragment_idx[:i]]/(np.pi*2), e[fragment_idx[:i]], c='black')
-
-axs[1][1].plot(times/(np.pi*2), e1, zorder=-1, c='tab:orange', alpha=0.3, label='Fam. 2')
-axs[1][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), e1[fragment_idx1[:i]], c='black')
+downsample = 3
+axs[1][1].plot(times[::downsample]/(np.pi*2), e1[::downsample], zorder=-1, c='tab:orange', alpha=0.7, label='Fam. 2', linestyle='--')
+axs[1][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), e1[(fragment_idx1[:i]//downsample)*downsample], c='black')
 
 
 axs[0][1].axhline(row['prope'], c='tab:blue', zorder=-1)
 axs[0][1].scatter(times[fragment_idx[:i]]/(np.pi*2), np.ones(len(fragment_idx[:i]))*row['prope'], c='black')
 
-axs[0][1].axhline(row1['prope'], c='tab:orange', zorder=-1)
+axs[0][1].axhline(row1['prope'], c='tab:orange', zorder=-1, linestyle='--')
 axs[0][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), np.ones(len(fragment_idx1[:i]))*row1['prope'], c='black')
 
 axs[1][1].set_xlabel("Phase")
