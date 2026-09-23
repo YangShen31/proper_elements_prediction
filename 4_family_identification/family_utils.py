@@ -30,9 +30,9 @@ def slab_d_calc(family_df_copy, family_pred_df, merged_df, command):
 	# e_adds = (family_df_copy[columns_bound["e"]].max() - family_df_copy[columns_bound["e"]].min())/2
 	# sini_adds = (family_df_copy[columns_bound["sini"]].max() - family_df_copy[columns_bound["sini"]].min())/2
 
-	a_adds = 0
-	e_adds = 0.001
-	sini_adds = 0.001
+	a_adds = 0.01
+	e_adds = 0.01
+	sini_adds = 0.01
 
 	# Calculate the bounds of the box and build a slab
 	a_min, a_max = family_df_copy[columns_bound["a"]].min() - a_adds, family_df_copy[columns_bound["a"]].max() + a_adds
