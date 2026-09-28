@@ -1,12 +1,18 @@
 # %%
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.ticker import MultipleLocator
+from matplotlib.transforms import Bbox, TransformedBbox, blended_transform_factory
+from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector, BboxConnectorPatch,
+                                                   BboxPatch)
+
 import pandas as pd
 import numpy as np
 
 import rebound as rb
 import assist
 
+plt.rcParams.update({'font.size': 8})
 %config InlineBackend.figure_format = 'retina'
 # %%
 nesvorny_data = pd.read_csv("data/nesvorny_catalog_dataset.csv", index_col=0)
@@ -63,55 +69,58 @@ for d in des:
     ecc.append(e)
 # %%
 time = t/(np.pi*2)/1e3
-fig, axs = plt.subplots(1, 2, sharey=False, sharex=True, figsize=(6,2))
+fig, axs = plt.subplots(1, 2, sharey=False, sharex=True, figsize=(7,2))
 
 colors = ["tab:orange", "tab:blue", "tab:green"]
 downsample=2
 
+### Plot the osculating and proper elements over time
 for i in range(len(des)):
     row = nesvorny_data[nesvorny_data["Des'n"] == des[i]].iloc[0]
-    axs[0].plot(time[::downsample], ecc[i][::downsample], c=colors[i], linewidth=0.8)
-    axs[0].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)))
+    axs[0].plot(time[::downsample], ecc[i][::downsample], c=colors[i], linewidth=0.8, zorder=0)
+    axs[0].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)), zorder=10)
 
     axs[1].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)))
 
     # plot sin with amplitude de and frequency $g$
     # axs[1].plot(t/(np.pi*2), row['de'] * np.sin(t * row['g']/TO_ARCSEC_PER_YEAR))
 
-# axis and legend
+### Axis labels and legend
 axs[0].set_ylabel("Eccentricity")
 axs[0].set_xlim(time[0],time[-1])
+axs[0].xaxis.set_major_locator(MultipleLocator(20))
 
-axs[1].legend(prop={'size': 6})
+axs[1].legend()
 ymin, ymax = 0.160, 0.164
 axs[1].set_ylim(ymin, ymax)
 axs[1].yaxis.tick_right()
+axs[1].yaxis.set_major_locator(MultipleLocator(0.002))
 
 fig.text(0.5, -0.04, 'Time [kyr]', ha='center')
 
 fig.tight_layout()
 
-# zoomed in patch
+### Black rectangle on left plot
 rect = patches.Rectangle(
     (time[0], ymin),
     time[-1]-time[0],
     ymax-ymin,
     linewidth=0.4,
     edgecolor='k',
-    facecolor='none'
+    facecolor='none',
+    zorder=10
 )
 axs[0].add_patch(rect)
 
+## Lines connecting the left and right axes
 # From: https://matplotlib.org/stable/gallery/subplots_axes_and_figures/axes_zoom_effect.html
-from matplotlib.transforms import Bbox, TransformedBbox, blended_transform_factory
-from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector, BboxConnectorPatch,
-                                                   BboxPatch)
-
+# bbox on the left plot (the whole x axis, and a portion of the y axis defined by ymin and ymax)
 bbox = Bbox.from_extents(0, ymin, 1, ymax)
-
 bbox1 = TransformedBbox(bbox, axs[0].get_yaxis_transform())
+# bbox on the right plot (the whole plot)
 bbox2 = axs[1].bbox
 
+# settings for how to render the bboxes and lines
 prop_lines = {}
 prop_patches = {
     **prop_lines,
@@ -119,13 +128,16 @@ prop_patches = {
     "clip_on": False,
 }
 
+# which corners to connect (top right (1) to top left (2) and bottom right (4) to bottom left (3))
 loc1a, loc2a, loc1b, loc2b = 1, 2, 4, 3
 
+# connect the bboxes with lines
 c1 = BboxConnector(
     bbox1, bbox2, loc1=loc1a, loc2=loc2a, clip_on=False, **prop_lines)
 c2 = BboxConnector(
     bbox1, bbox2, loc1=loc1b, loc2=loc2b, clip_on=False, **prop_lines)
 
+# different background color for the bboxes (disabled)
 bbox_patch1 = BboxPatch(bbox1, **prop_patches)
 bbox_patch2 = BboxPatch(bbox2, **prop_patches)
 
@@ -133,12 +145,14 @@ p = BboxConnectorPatch(bbox1, bbox2,
                         loc1a=loc1a, loc2a=loc2a, loc1b=loc1b, loc2b=loc2b,
                         **prop_patches)
 
+# render everything
 axs[0].add_patch(bbox_patch1)
 axs[1].add_patch(bbox_patch2)
 axs[1].add_patch(c1)
 axs[1].add_patch(c2)
 axs[1].add_patch(p)
 
+### Render and save
 plt.savefig("plots/proper_elements_explanation.pdf", bbox_inches="tight")
 plt.show()
 # %%
