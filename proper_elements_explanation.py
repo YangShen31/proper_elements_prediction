@@ -71,15 +71,22 @@ for d in des:
 time = t/(np.pi*2)/1e3
 fig, axs = plt.subplots(1, 2, sharey=False, sharex=True, figsize=(7,2))
 
-colors = ["tab:orange", "tab:blue", "tab:green"]
+colors = ["tab:purple", "tab:pink", "tab:brown"]
 downsample=2
 
 ### Plot the osculating and proper elements over time
 for i in range(len(des)):
     row = nesvorny_data[nesvorny_data["Des'n"] == des[i]].iloc[0]
+    # osc
     axs[0].plot(time[::downsample], ecc[i][::downsample], c=colors[i], linewidth=0.8, zorder=0)
+    # proper
     axs[0].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)), zorder=10)
+    # dot
+    axs[0].scatter(time[time.shape[0]//2], ecc[i][time.shape[0]//2],
+                   c=colors[i], s=25, edgecolors='black', linewidth=0.75,
+                   zorder=20)
 
+    # proper
     axs[1].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)))
 
     # plot sin with amplitude de and frequency $g$
@@ -89,14 +96,15 @@ for i in range(len(des)):
 axs[0].set_ylabel("Eccentricity")
 axs[0].set_xlim(time[0],time[-1])
 axs[0].xaxis.set_major_locator(MultipleLocator(20))
+axs[0].text(0.5, -0.2, 'Present epoch', horizontalalignment='center', verticalalignment='center', transform=axs[0].transAxes)
 
-axs[1].legend()
+axs[1].legend(labelspacing=0.3)
 ymin, ymax = 0.160, 0.164
 axs[1].set_ylim(ymin, ymax)
 axs[1].yaxis.tick_right()
 axs[1].yaxis.set_major_locator(MultipleLocator(0.002))
 
-fig.text(0.5, -0.04, 'Time [kyr]', ha='center')
+fig.text(0.5, 0.05, 'Time [kyr]', ha='center')
 
 fig.tight_layout()
 
