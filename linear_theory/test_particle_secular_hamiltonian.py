@@ -484,8 +484,8 @@ class TestParticleSecularHamiltonian():
         return x_soln,y_soln
 
 
-def linear_theory_prediction(e, inc, omega, Omega, propa, simpler_secular_theory):
-    X = np.sqrt(2*(1-np.sqrt(1-e**2))) * np.exp(1j * omega)
+def linear_theory_prediction(e, inc, pomega, Omega, propa, simpler_secular_theory):
+    X = np.sqrt(2*(1-np.sqrt(1-e**2))) * np.exp(1j * pomega)
     Y = 2*(1-e**2)**(0.25) * np.sin(0.5 * inc) * np.exp(1j * Omega)
     tp_h = TestParticleSecularHamiltonian(propa, simpler_secular_theory)
 

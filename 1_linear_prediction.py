@@ -90,7 +90,7 @@ with Pool(ncpus) as p:
 	table = list(tqdm(p.imap(ecc_inc_prediction, nesvorny_df.iterrows()), total=len(nesvorny_df)))
 eval_t = (time.process_time() - start_t) * ncpus
 print(f"Linear Theory Time: {eval_t:.2f} sec for {len(nesvorny_df)} asteroids. {eval_t/len(nesvorny_df):.4} sec / asteroid")
-# Linear Theory Time: 11799.94 sec for 1249051 asteroids. 0.009447 sec / asteroid
+# Linear Theory Time: 11715.38 sec for 1249051 asteroids. 0.009379 sec / asteroid
 # %%
 # u0,v0 are the complex proper elements in the invariable frame
 # g0,s0 are the proper frequencies

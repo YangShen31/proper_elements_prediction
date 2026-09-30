@@ -1,11 +1,18 @@
 # %%
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.ticker import MultipleLocator
+from matplotlib.transforms import Bbox, TransformedBbox, blended_transform_factory
+from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector, BboxConnectorPatch,
+                                                   BboxPatch)
+
 import pandas as pd
 import numpy as np
 
 import rebound as rb
 import assist
 
+plt.rcParams.update({'font.size': 8})
 %config InlineBackend.figure_format = 'retina'
 # %%
 nesvorny_data = pd.read_csv("data/nesvorny_catalog_dataset.csv", index_col=0)
@@ -13,6 +20,8 @@ ephem = assist.Ephem("data/assist/linux_m13000p17000.441", "data/assist/sb441-n1
 # %%
 epoch = 2460200.5
 epoch_n = 2460200.5 # Nesvorny epoch
+
+TO_ARCSEC_PER_YEAR = 60*60*180/np.pi * (2*np.pi)
 # %%
 def get_e(row):
     Nout = int(500)
@@ -38,7 +47,8 @@ def get_e(row):
             omega=row['Peri.']*np.pi/180, 
             M=row['M']*np.pi/180)
 
-    times = np.linspace(sim.t, 80e3*np.pi*2 + sim.t, Nout)
+    time_span = 80e3*np.pi*2
+    times = np.linspace(sim.t-time_span/2, sim.t+time_span/2, Nout)
     e = np.zeros(Nout)
 
     for i, time in enumerate(times):
@@ -48,163 +58,109 @@ def get_e(row):
         e[i] = orbit.e
     return e, times
 # %%
-des = ["K10B40G", "K19N18R", "m4495", "K15P14X", "99528", "K17C22O", "B5159"]
-row = nesvorny_data[nesvorny_data["Des'n"] == des[-2]].iloc[0]
-row
+# from: highi_1312_vassar_fam3
+des = ["K10B40G", "K16NH8S", "K14T98G"]
 # %%
-e, times = get_e(row)
-
-fig, axs = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(6,2))
-
-axs[0].plot(times/(np.pi*2), e)
-axs[0].set_xlim(5000, 75000)
-axs[0].set_ylabel("$e$")
-axs[0].set_title("Eccentricity")
-
-axs[1].axhline(row['prope'])
-axs[1].set_title("Proper Eccentricity")
-
-fig.text(0.5, -0.06, 'Time [yr]', ha='center')
+ecc = []
+t = np.array([])
+for d in des:
+    row = nesvorny_data[nesvorny_data["Des'n"] == d].iloc[0]
+    e, t = get_e(row)
+    ecc.append(e)
 # %%
-fragment_idx_base = [375]
-fragment_idx = fragment_idx_base
-# fragment_idx_rand = np.random.rand(10)
-fragment_idx_rand = np.array([0.92133582, 0.78800129, 0.12554724, 0.59192609, 0.53162654,
-       0.34461229, 0.81344192, 0.2996385 , 0.1975619 , 0.38077154])
-fragment_idx = (fragment_idx_base[0] + 500 * (fragment_idx_rand - 0.5)).astype(int) % 499
-# multiply by 0, then 100, then 500    ^^^  to get animation of the dots spreading out
+time = t/(np.pi*2)/1e3
+fig, axs = plt.subplots(1, 2, sharey=False, sharex=True, figsize=(7,2))
 
-fig, axs = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(6,2))
+colors = ["tab:purple", "tab:pink", "tab:brown"]
+downsample=2
 
-axs[0].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue')
-axs[0].set_xlim(5000, 75000)
-axs[0].set_ylim(0.06, 0.25)
-axs[0].set_ylabel("$e$")
-axs[0].set_title("Osculating Eccentricity")
-axs[0].set_xticks([])
+### Plot the osculating and proper elements over time
+for i in range(len(des)):
+    row = nesvorny_data[nesvorny_data["Des'n"] == des[i]].iloc[0]
+    # osc
+    axs[0].plot(time[::downsample], ecc[i][::downsample], c=colors[i], linewidth=0.8, zorder=0)
+    # proper
+    axs[0].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)), zorder=10)
+    # dot
+    axs[0].scatter(time[time.shape[0]//2], ecc[i][time.shape[0]//2],
+                   c=colors[i], s=25, edgecolors='black', linewidth=0.75,
+                   zorder=20)
 
-axs[0].scatter(times[fragment_idx]/(np.pi*2), e[fragment_idx], c='black')
+    # proper
+    axs[1].axhline(row["prope"], c=colors[i], label=row["Des'n"], linestyle=(i, (3, 2)))
 
-axs[1].axhline(row['prope'], c='tab:blue', zorder=-1)
-axs[1].set_title("Proper Eccentricity")
-axs[1].scatter(times[fragment_idx]/(np.pi*2), np.ones(len(fragment_idx))*row['prope'], c='black')
+    # plot sin with amplitude de and frequency $g$
+    # axs[1].plot(t/(np.pi*2), row['de'] * np.sin(t * row['g']/TO_ARCSEC_PER_YEAR))
 
-# fig.text(0.5, -0.06, 'Time [yr]', ha='center')
-# %%
-row1 = nesvorny_data[nesvorny_data["Des'n"] == des[0]].iloc[0]
-e1, times = get_e(row1)
+### Axis labels and legend
+axs[0].set_ylabel("Eccentricity")
+axs[0].set_xlim(time[0],time[-1])
+axs[0].xaxis.set_major_locator(MultipleLocator(20))
+axs[0].text(0.5, -0.2, 'Present epoch', horizontalalignment='center', verticalalignment='center', transform=axs[0].transAxes)
 
-fig, axs = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(6,2))
+axs[1].legend(labelspacing=0.3)
+ymin, ymax = 0.160, 0.164
+axs[1].set_ylim(ymin, ymax)
+axs[1].yaxis.tick_right()
+axs[1].yaxis.set_major_locator(MultipleLocator(0.002))
 
-axs[0].plot(times/(np.pi*2), e1)
-axs[0].set_xlim(5000, 75000)
-axs[0].set_ylabel("$e$")
-axs[0].set_title("Eccentricity")
+fig.text(0.5, 0.05, 'Time [kyr]', ha='center')
 
-axs[1].axhline(row['prope'])
-axs[1].set_title("Proper Eccentricity")
+fig.tight_layout()
 
-fig.text(0.5, -0.06, 'Time [yr]', ha='center')
-# %%
-fragment_idx_base = [375]
-fragment_idx = fragment_idx_base
-# fragment_idx_rand = np.random.rand(10)
-fragment_idx_rand = np.array([0.92133582, 0.78800129, 0.12554724, 0.59192609, 0.53162654,
-       0.34461229, 0.81344192, 0.2996385 , 0.1975619 , 0.38077154])
-fragment_idx = (fragment_idx_base[0] + 500 * (fragment_idx_rand - 0.5)).astype(int) % 499
+### Black rectangle on left plot
+rect = patches.Rectangle(
+    (time[0], ymin),
+    time[-1]-time[0],
+    ymax-ymin,
+    linewidth=0.4,
+    edgecolor='k',
+    facecolor='none',
+    zorder=10
+)
+axs[0].add_patch(rect)
 
-fig, axs = plt.subplots(1, 2, sharey=True, sharex=True, figsize=(6,2))
+## Lines connecting the left and right axes
+# From: https://matplotlib.org/stable/gallery/subplots_axes_and_figures/axes_zoom_effect.html
+# bbox on the left plot (the whole x axis, and a portion of the y axis defined by ymin and ymax)
+bbox = Bbox.from_extents(0, ymin, 1, ymax)
+bbox1 = TransformedBbox(bbox, axs[0].get_yaxis_transform())
+# bbox on the right plot (the whole plot)
+bbox2 = axs[1].bbox
 
-axs[0].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue')
-axs[0].set_xlim(5000, 75000)
-axs[0].set_ylim(0.06, 0.25)
-axs[0].set_ylabel("$e$")
-axs[0].set_title("Osculating Eccentricity")
-axs[0].set_xticks([])
+# settings for how to render the bboxes and lines
+prop_lines = {}
+prop_patches = {
+    **prop_lines,
+    "alpha": prop_lines.get("alpha", 1) * 0,
+    "clip_on": False,
+}
 
-axs[0].scatter(times[fragment_idx]/(np.pi*2), e[fragment_idx], c='black')
+# which corners to connect (top right (1) to top left (2) and bottom right (4) to bottom left (3))
+loc1a, loc2a, loc1b, loc2b = 1, 2, 4, 3
 
-axs[1].axhline(row['prope'], c='tab:blue', zorder=-1)
-axs[1].set_title("Proper Eccentricity")
-axs[1].scatter(times[fragment_idx]/(np.pi*2), np.ones(len(fragment_idx))*row['prope'], c='black')
+# connect the bboxes with lines
+c1 = BboxConnector(
+    bbox1, bbox2, loc1=loc1a, loc2=loc2a, clip_on=False, **prop_lines)
+c2 = BboxConnector(
+    bbox1, bbox2, loc1=loc1b, loc2=loc2b, clip_on=False, **prop_lines)
 
-fragment_idx_base1 = [375]
-fragment_idx1 = fragment_idx_base1
-# fragment_idx_rand = np.random.rand(10)
-fragment_idx_rand1 = np.array([0.65264815, 0.71442867, 0.91297066, 0.45948945, 0.97008024,
-       0.3226722 , 0.49777986, 0.92008058, 0.18583027, 0.70138386])
-fragment_idx1 = (fragment_idx_base1[0] + 500 * (fragment_idx_rand1 - 0.5)).astype(int) % 499
+# different background color for the bboxes (disabled)
+bbox_patch1 = BboxPatch(bbox1, **prop_patches)
+bbox_patch2 = BboxPatch(bbox2, **prop_patches)
 
+p = BboxConnectorPatch(bbox1, bbox2,
+                        loc1a=loc1a, loc2a=loc2a, loc1b=loc1b, loc2b=loc2b,
+                        **prop_patches)
 
-axs[0].plot(times/(np.pi*2), e1, zorder=-1, c='tab:orange')
-axs[0].scatter(times[fragment_idx1]/(np.pi*2), e1[fragment_idx1], c='black')
+# render everything
+axs[0].add_patch(bbox_patch1)
+axs[1].add_patch(bbox_patch2)
+axs[1].add_patch(c1)
+axs[1].add_patch(c2)
+axs[1].add_patch(p)
 
-axs[1].axhline(row1['prope'], c='tab:orange', zorder=-1)
-axs[1].scatter(times[fragment_idx1]/(np.pi*2), np.ones(len(fragment_idx1))*row1['prope'], c='black')
-# %%
-from matplotlib.patches import ConnectionPatch
-i = 6
-fig, axs = plt.subplots(2, 2, sharex=True, sharey='row', figsize=(10,2.5), gridspec_kw={'height_ratios':[1,3], 'hspace':0})
-
-fig.subplots_adjust(hspace=0.01)
-
-### LEFT ###
-
-for idx in range(i):
-    t = (times[fragment_idx[idx]]/(np.pi*2), row['prope'] - 0.006)
-    b = (times[fragment_idx[idx]]/(np.pi*2), e[fragment_idx[idx]])
-    con = ConnectionPatch(xyA=b, xyB=t, coordsA="data", coordsB="data",
-                          axesA=axs[1][0], axesB=axs[0][0],
-                          zorder=1, color="gray", linestyle="--")
-    axs[1][0].add_artist(con)
-
-axs[1][0].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue')
-axs[1][0].scatter(times[fragment_idx[:i]]/(np.pi*2), e[fragment_idx[:i]], c='black', zorder=2, label='Fragment')
-
-axs[0][0].axhline(row['prope'], c='tab:blue', zorder=-1)
-axs[0][0].scatter(times[fragment_idx[:i]]/(np.pi*2), np.ones(len(fragment_idx[:i]))*row['prope'], c='black', zorder=2, label='Fragment')
-
-axs[0][0].set_ylim(0.13, 0.17)
-axs[0][0].set_xlim(0, np.max(times/(np.pi*2)))
-
-axs[1][0].set_xlabel("Phase")
-
-axs[1][0].set_ylabel("Ecc.")
-
-axs[0][0].set_ylabel("Prop.\nEcc.")
-
-#### PARENT ASTEROID ####
-
-# axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', s=5, zorder=10, label='Parent')
-axs[1][0].scatter(times[fragment_idx[5]]/(np.pi*2), e[fragment_idx[5]], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
-axs[0][0].scatter(times[fragment_idx[5]]/(np.pi*2), row['prope'], color='white', edgecolors='black' , s=40, lw=2, zorder=10, label='Parent')
-axs[1][0].legend(ncols=2, columnspacing=0.8, handletextpad=0.0)
-
-### RIGHT ###
-
-axs[1][1].plot(times/(np.pi*2), e, zorder=-1, c='tab:blue', alpha=0.3, label='Fam. 1')
-axs[1][1].scatter(times[fragment_idx[:i]]/(np.pi*2), e[fragment_idx[:i]], c='black')
-
-axs[1][1].plot(times/(np.pi*2), e1, zorder=-1, c='tab:orange', alpha=0.3, label='Fam. 2')
-axs[1][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), e1[fragment_idx1[:i]], c='black')
-
-
-axs[0][1].axhline(row['prope'], c='tab:blue', zorder=-1)
-axs[0][1].scatter(times[fragment_idx[:i]]/(np.pi*2), np.ones(len(fragment_idx[:i]))*row['prope'], c='black')
-
-axs[0][1].axhline(row1['prope'], c='tab:orange', zorder=-1)
-axs[0][1].scatter(times[fragment_idx1[:i]]/(np.pi*2), np.ones(len(fragment_idx1[:i]))*row1['prope'], c='black')
-
-axs[1][1].set_xlabel("Phase")
-
-axs[0][1].set_xticks([])
-# axs[1][1].set_yticks([])
-# axs[0][1].set_yticks([])
-
-leg = axs[1][1].legend(ncols=2, loc="upper center", columnspacing=0.8)
-for lh in leg.legend_handles: 
-    lh.set_alpha(1)
-
-plt.tight_layout()
-plt.savefig("plots/proper_elements_explanation.pdf")
+### Render and save
+plt.savefig("plots/proper_elements_explanation.pdf", bbox_inches="tight")
+plt.show()
 # %%
