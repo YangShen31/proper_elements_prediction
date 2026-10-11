@@ -1,5 +1,5 @@
 # A machine learning model to predict proper orbital elements for main-belt asteroid family classification
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20693708.svg)](https://doi.org/10.5281/zenodo.20693708)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20693707.svg)](https://doi.org/10.5281/zenodo.20693707)
 
 Arxiv release coming soon!
 
@@ -8,7 +8,7 @@ Arxiv release coming soon!
 In a new virtual environment (eg `python -m venv .venv`), install the required libraries as specified in `requirements.txt`. We used python 3.12, but it should work with other versions. See the [xgboost documentation](https://xgboost.readthedocs.io/en/stable/install.html) for OS specific instructions if you run into errors.
 
 #### If you want to use the pretrained models:
-First, download `merged_elements.csv` (this contains linear predictions for all asteroids) and place it in `data/`. Second, download the pre-trained `*.xgb` files on Zenodo [10.5281/zenodo.20693708](https://doi.org/10.5281/zenodo.20693708), and place them in `data/models`.
+First, download `merged_elements.csv` (this contains linear predictions for all asteroids) and place it in `data/`. Second, download the pre-trained `*.xgb` files on Zenodo [10.5281/zenodo.20693707](https://doi.org/10.5281/zenodo.20693707), and place them in `data/models`.
 
 #### If you want to identify asteroid families:
 
