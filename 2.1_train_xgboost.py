@@ -22,7 +22,7 @@ linear_theory_df['u0'] = linear_theory_df['u0'].apply(lambda x: complex(x))
 linear_theory_df['v0'] = linear_theory_df['v0'].apply(lambda x: complex(x))
 # calculate linear elements
 linear_theory_df['prope_linear'] = np.abs(linear_theory_df['u0'])
-linear_theory_df['propsini_linear'] = np.abs(linear_theory_df['v0'])
+linear_theory_df['propsini_linear'] = np.sin(np.abs(linear_theory_df['v0']))
 # rename linear frequencies
 linear_theory_df['g_linear'] = linear_theory_df['g0']
 linear_theory_df['s_linear'] = linear_theory_df['s0']
@@ -90,10 +90,8 @@ grid_search2_e.fit(trainX_e, trainY_e)
 
 end = time.time()
 print(f"Best score: {grid_search2_e.best_score_:.3}") # this is MSE not RMSE
-# Best score: -3.52e-0
 print(f"Best parameters: {grid_search1_e.best_params_ | grid_search2_e.best_params_}")
 print("Optimization Time: %.2f seconds" % (end - start))
-# Optimization Time: 12526.28 seconds
 # %%
 # COMMENT OUT TO SKIP HYPERPARAMETER TUNING
 final_model_e = XGBRegressor(**{**grid_search1_e.best_params_, **grid_search2_e.best_params_}, n_jobs=40)
@@ -123,15 +121,13 @@ grid_search2_inc.fit(trainX_inc, trainY_inc)
 
 end = time.time()
 print(f"Best score: {grid_search2_inc.best_score_:.3}") # this is MSE not RMSE
-# Best score: -3.52e-05
 print(f"Best parameters: {grid_search1_inc.best_params_ | grid_search2_inc.best_params_}")
 print("Optimization Time: %.2f seconds" % (end - start))
-# Optimization Time: 7466.49 seconds
 # %%
 # COMMENT OUT TO SKIP HYPERPARAMETER TUNING
 final_model_inc = XGBRegressor(**{**grid_search1_inc.best_params_, **grid_search2_inc.best_params_}, n_jobs=40)
 # UNCOMMENT TO USE OUR FOUND OPTIMAL HYPERPARAMETERS
-# inc_best_params = {'colsample_bytree': np.float64(0.9), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 2000}
+# inc_best_params = {'colsample_bytree': np.float64(1.0), 'max_depth': np.int64(9), 'min_child_weight': np.int64(1), 'subsample': np.float64(1.0), 'learning_rate': 0.05, 'n_estimators': 1500}
 # final_model_inc = XGBRegressor(**inc_best_params, n_jobs=40)
 
 final_model_inc.fit(trainX_inc, trainY_inc)
@@ -146,11 +142,9 @@ e_best_idx = grid_search2_e.best_index_
 e_score_mean = grid_search2_e.cv_results_["mean_test_score"][e_best_idx]
 e_score_std = grid_search2_e.cv_results_["std_test_score"][e_best_idx]
 print(f"Ecc score: {-e_score_mean:.5} ± {e_score_std:.5}")
-# Ecc score: 0.0001586 ± 3.1417e-0
 
 inc_best_idx = grid_search2_inc.best_index_
 inc_score_mean = grid_search2_inc.cv_results_["mean_test_score"][inc_best_idx]
 inc_score_std = grid_search2_inc.cv_results_["std_test_score"][inc_best_idx]
 print(f"Inc score: {-inc_score_mean:.5} ± {inc_score_std:.5}")
-# Inc score: 3.5194e-05 ± 3.4546e-06
 # %%
