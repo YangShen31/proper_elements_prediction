@@ -14,7 +14,7 @@ from celmech.nbody_simulation_utilities import get_simarchive_integration_result
 import assist
 from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements, sun_sim
 # %%
-model_results = pd.read_csv("data/model_results.csv", index_col=0, dtype={"Des'n": str})
+merged_elements = pd.read_csv("data/merged_elements.csv", index_col=0, dtype={"Des'n": str})
 
 prediction_path = Path("data/pred_propa")
 prediction_path.mkdir(parents=True, exist_ok=True)
@@ -23,7 +23,7 @@ ephem = assist.Ephem("data/assist/linux_m13000p17000.441", "data/assist/sb441-n1
 conver = 58.132440867049
 epoch = 2460200.5
 # %%
-num_to_run = len(model_results)
+num_to_run = len(merged_elements)
 # %%
 sun = sun_sim.particles[0]
 def propa_calc(r):
@@ -36,7 +36,7 @@ def propa_calc(r):
 		 e=row['e'], 
 		 inc=row['Incl.']*np.pi/180, 
 		 Omega=row['Node']*np.pi/180, 
-		 omega=row['Peri.']*np.pi/180, 
+		 pomega=row['Peri.']*np.pi/180, 
 		 M=row['M']*np.pi/180)
 	p = sim.particles[-1]
 	p = ecliptic_to_icrf(sim.particles[-1])
@@ -72,7 +72,7 @@ def propa_calc(r):
 
 	return des, np.mean(a), row["propa"]
 
-r = propa_calc(next(model_results.iterrows()))
+r = propa_calc(next(merged_elements.iterrows()))
 r
 # %%
 start_t = time.process_time()
@@ -80,12 +80,12 @@ ncpus = 40
 with Pool(ncpus) as p:
 	raw_results = list(
 		tqdm(
-			p.imap(propa_calc, islice(model_results.iterrows(), num_to_run)),
+			p.imap(propa_calc, islice(merged_elements.iterrows(), num_to_run)),
 			total=num_to_run
 		)
 	)
 eval_t = (time.process_time() - start_t) * ncpus
-print(f"Linear Theory Time: {eval_t:.2f} sec for {len(model_results)} asteroids. {eval_t/len(model_results):.4} sec / asteroid")
+print(f"Linear Theory Time: {eval_t:.2f} sec for {len(merged_elements)} asteroids. {eval_t/len(merged_elements):.4} sec / asteroid")
 results = [r for r in raw_results if r is not None]
 
 df_results = pd.DataFrame(results, columns=["Des'n", "propa_cal", "propa_nes"])

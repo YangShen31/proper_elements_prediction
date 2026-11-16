@@ -83,7 +83,7 @@ def ecc_inc_prediction(r):
 	u0, v0, g0, s0 = linear_theory_prediction(orb.e, orb.inc, orb.pomega, orb.Omega, orb.a, simpler_secular_theory)
 
 	# From now on, we will use the invariable frame elements as the oscullating elements
-	return time.process_time() - start_t, row["Des'n"], u0, v0, g0, s0, orb.a, orb.e, np.degrees(orb.inc), np.degrees(orb.Omega), np.degrees(orb.pomega)
+	return time.process_time() - start_t, row["Des'n"], u0, v0, g0, s0, orb.a, orb.e, np.degrees(orb.inc), np.degrees(orb.Omega), np.degrees(orb.omega)
 # %%
 ncpus = 40
 with Pool(ncpus) as p:
