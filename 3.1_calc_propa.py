@@ -12,9 +12,9 @@ import numpy as np
 import rebound as rb
 from celmech.nbody_simulation_utilities import get_simarchive_integration_results
 import assist
-from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements, sun_sim
+from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements, UNIT_CONVER, sun_sim
 # %%
-merged_elements = pd.read_csv("data/merged_elements.csv", index_col=0, dtype={"Des'n": str})
+nesvorny_elements = pd.read_csv("data/nesvorny_catalog_dataset.csv", index_col=0, dtype={"Des'n": str})
 
 prediction_path = Path("data/pred_propa")
 prediction_path.mkdir(parents=True, exist_ok=True)
@@ -23,7 +23,7 @@ ephem = assist.Ephem("data/assist/linux_m13000p17000.441", "data/assist/sb441-n1
 conver = 58.132440867049
 epoch = 2460200.5
 # %%
-num_to_run = len(merged_elements)
+num_to_run = 10000 #len(nesvorny_elements)
 # %%
 sun = sun_sim.particles[0]
 def propa_calc(r):
@@ -36,11 +36,11 @@ def propa_calc(r):
 		 e=row['e'], 
 		 inc=row['Incl.']*np.pi/180, 
 		 Omega=row['Node']*np.pi/180, 
-		 pomega=row['Peri.']*np.pi/180, 
+		 omega=row['Peri.']*np.pi/180, 
 		 M=row['M']*np.pi/180)
 	p = sim.particles[-1]
 	p = ecliptic_to_icrf(sim.particles[-1])
-	p.vxyz = np.array(p.vxyz) / conver
+	p.vxyz = np.array(p.vxyz) / UNIT_CONVER
 
 	# ASSIST integration
 	Nout = int(1e3*np.pi)
@@ -51,19 +51,37 @@ def propa_calc(r):
 	
     # We are doing the unit conversion ourself (using the conver variable)
 	with warnings.catch_warnings():
-		warnings.filterwarnings("ignore", message="Particle is being adding from a simulation that uses different units.")
+		warnings.filterwarnings(
+			"ignore",
+			message=r"Particle added is from a simulation that uses different units\.",
+			category=RuntimeWarning,
+		)
 		sim.add(p)
 	
 	p = icrf_to_ecliptic(p)
-	orb = ecliptic_xyz_to_elements(p)
 	times = np.linspace(sim.t, 3e5 + sim.t, Nout)
 	a = np.zeros(Nout)
+
+	# Get the solar ephemeris for Sun's position at different times
+	def sun_state_at_time(t):
+		sun = ephem.get_particle("sun", t)
+		sun = icrf_to_ecliptic(sun)
+		return np.array([
+			sun.x, sun.y, sun.z,
+			sun.vx * UNIT_CONVER, sun.vy * UNIT_CONVER, sun.vz * UNIT_CONVER
+		])
+
+	sun_states = np.array([sun_state_at_time(t) for t in times])
+	
 	for i, time in enumerate(times):
 		sim.integrate(time)
 		p = sim.particles[-1]
 		p = icrf_to_ecliptic(p)
 		p.vxyz = np.array(p.vxyz) * conver
-		orbit = ecliptic_xyz_to_elements(p)
+		sx, sy, sz, svx, svy, svz = sun_states[i]
+		sun_now = rb.Particle(x=sx, y=sy, z=sz,
+							vx=svx, vy=svy, vz=svz, m=1.0)
+		orbit = ecliptic_xyz_to_elements(p, sun_now)
 		p.vxyz = np.array(p.vxyz) / conver
 		p = ecliptic_to_icrf(p)
 		a[i] = orbit.a
@@ -72,7 +90,7 @@ def propa_calc(r):
 
 	return des, np.mean(a), row["propa"]
 
-r = propa_calc(next(merged_elements.iterrows()))
+r = propa_calc(next(nesvorny_elements.iterrows()))
 r
 # %%
 start_t = time.process_time()
@@ -80,12 +98,12 @@ ncpus = 40
 with Pool(ncpus) as p:
 	raw_results = list(
 		tqdm(
-			p.imap(propa_calc, islice(merged_elements.iterrows(), num_to_run)),
+			p.imap(propa_calc, islice(nesvorny_elements.iterrows(), num_to_run)),
 			total=num_to_run
 		)
 	)
 eval_t = (time.process_time() - start_t) * ncpus
-print(f"Linear Theory Time: {eval_t:.2f} sec for {len(merged_elements)} asteroids. {eval_t/len(merged_elements):.4} sec / asteroid")
+print(f"Proper semi-major axis calculation time: {eval_t:.2f} sec for {len(nesvorny_elements)} asteroids. {eval_t/len(nesvorny_elements):.4} sec / asteroid")
 results = [r for r in raw_results if r is not None]
 
 df_results = pd.DataFrame(results, columns=["Des'n", "propa_cal", "propa_nes"])
