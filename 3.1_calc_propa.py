@@ -16,8 +16,6 @@ from utils import ecliptic_to_icrf, icrf_to_ecliptic, ecliptic_xyz_to_elements, 
 # %%
 nesvorny_elements = pd.read_csv("data/nesvorny_catalog_dataset.csv", index_col=0, dtype={"Des'n": str})
 
-prediction_path = Path("data/pred_propa")
-prediction_path.mkdir(parents=True, exist_ok=True)
 ephem = assist.Ephem("data/assist/linux_m13000p17000.441", "data/assist/sb441-n16.bsp")
 
 conver = 58.132440867049
