@@ -31,11 +31,11 @@ def icrf_to_ecliptic(p: rb.Particle):
     p.vxyz = np.array(p.vxyz) @ BWD_ROTATION_MATRIX
     return p
 
-def ecliptic_xyz_to_elements(p: rb.Particle):
+def ecliptic_xyz_to_elements(p: rb.Particle, sun):
     '''
     Particle mass should be in units where the GM for the sun is 1, AU, and yr
     '''
     # tmp = sun_sim.copy()
     # tmp.add(p.copy())
     # return tmp.particles[1].orbit(tmp.particles[0], G=1)
-    return p.orbit(primary=sun_sim.particles[0], G=1)
+    return p.orbit(primary=sun, G=1)
