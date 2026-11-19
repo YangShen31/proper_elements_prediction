@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-d_values = np.linspace(0, 2000, 2000)
+d_values = np.linspace(30, 200, 170)
 
 def calculate_d(a_p, delta_a_p, delta_e_p, delta_sin_i_p):
 	numerator = 3e4  # 3 × 10^4 m/s
@@ -60,8 +60,9 @@ def slab_d_calc(family_df_copy, family_pred_df, merged_df, command):
 			else:
 				da = a_f - a
 				de = e_f - e
+				a_avg = (a_f + a)/2
 				dsini = sini_f - sini
-				d = calculate_d(a, da, de, dsini)
+				d = calculate_d(a_avg, da, de, dsini)
 				d_results.append({
 					"name_asteroid": name,
 					"name_family_asteroid": name_f,
