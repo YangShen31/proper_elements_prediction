@@ -34,7 +34,6 @@ pred_e = final_model_e.predict(X_e)
 pred_inc = final_model_inc.predict(X_inc)
 eval_t = time.process_time() - start_t
 print(f"Model Evaluation Time: {eval_t:.2f} sec for {len(X_e)} asteroids. {eval_t/len(X_e):.4} sec / asteroid")
-# Model Evaluation Time: 43.54 sec for 249811 asteroids. 0.0001743 sec / asteroid
 
 df_xgb = pd.DataFrame(list(zip(Y_e, pred_e, Y_inc, pred_inc)), columns = ["actual_dele", "pred_dele", "actual_delsini", "pred_delsini"])
 df_xgb = df_xgb.reset_index(drop=True)
