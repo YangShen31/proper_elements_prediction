@@ -24,7 +24,7 @@ This is the most common use case of this repository, and doesn't require trainin
 
 Second, download the ASSIST ephemeris files and place them in `data/assist` as described [here](https://assist.readthedocs.io/en/latest/jupyter_examples/GettingStarted/). This is needed for the ephemeris integration we use to find the osculating elements of your body at JD2460200.5 (when the Nesvorny'24 dataset was gathered).
 
-Now you are ready to run `full_pipeline.ipynb` which includes examples for how to predict orbital elements for asteroids in NASA horizon's database and with custom provided osculating elements. We are updating it to include an N-Body calculation of proper elements using [SBDynT](https://arxiv.org/pdf/2603.27099).
+Now you are ready to run `full_pipeline_example.ipynb` which includes examples for how to predict orbital elements for asteroids in NASA horizon's database and with custom provided osculating elements. We are updating it to include an N-Body calculation of proper elements using [SBDynT](https://arxiv.org/pdf/2603.27099).
 
 ## Re-create Results from the Paper
 
@@ -41,4 +41,4 @@ The jupyter notebook `3_evaluate_models.ipynb` contains code to create most of t
 
 `4_family_identification/4.1_family_identification.ipynb` shows how to analyze the model performance on a single family. `4_family_identification/4.2_histogram_generations.ipynb` repeats this process for every family in the Nesvorny'24 dataset.
 
-This code is only for *evaluating* the performance of family identification, it does not demonstrate how identify which family a newly observed asteroid is in. See [Analyze New Asteroids](#analyze-new-asteroids) and `full_pipeline.ipynb` for an example of that.
+`5_evaluate_full_pipeline.py` tests the whole process starting with an asteroid designator and determining which family it is in. For an easier to understand example of this, see [Analyze New Asteroids](#analyze-new-asteroids) and `full_pipeline_example.ipynb`.
