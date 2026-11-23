@@ -317,6 +317,7 @@ def prep_family_data():
 	# "d(80% Precision)" is the d threshold that achieves 80% precision
 	# "d(80% Percent)" is the d threshold that achieves 80% percent detected
 	desired_d = "d(80% Percent)"
+	# desired_d = "d(Last 80% Precision)"
 
 
 	filenames = list(Path('data/family_tables').glob('*.csv'))
@@ -325,6 +326,10 @@ def prep_family_data():
 		f.stem.split("_")[1]: f
 		for f in filenames
 	}
+	# handle both families with the number 0
+	del family_file_map['0']
+	family_file_map['inner_0'] = Path('data/family_tables/inner_0_2012pm61_fam3.csv')
+	family_file_map['middle_0'] = Path('data/family_tables/middle_0_2006qx49_fam3.csv')
 
 	family_name_map = (
 		df_d.assign(Number=df_d["Number"].astype(str))
@@ -401,6 +406,10 @@ family_file_map = {
 	f.stem.split("_")[1]: f
 	for f in filenames
 }
+# handle both families with the number 0
+del family_file_map['0']
+family_file_map['inner_0'] = Path('data/family_tables/inner_0_2012pm61_fam3.csv')
+family_file_map['middle_0'] = Path('data/family_tables/middle_0_2006qx49_fam3.csv')
 
 df_merged_elements = pd.read_csv("data/merged_elements.csv", dtype={"Des'n": 'str'})
 df_lookup = df_merged_elements[["Des'n", "test_set"]].copy()
@@ -517,4 +526,60 @@ for r, ast in results_df.iterrows():
 print()
 print(f"Accuracy (top-5): {n_top_5/len(results_df):.3f}")
 print(f"Accuracy (top-1): {n_correct/len(results_df):.3f}")
+# %%
+# check the asteroids that were assigned to multiple families
+for i,f in enumerate(['63530', '37981']): # same family
+# for i,f in enumerate(['29880', '5228']): # different families
+# for i,f in enumerate(['4471', '392']): # different families
+    df_family = read_family_file(family_file_map[f])
+    fam_prope = df_family["prope"]
+    fam_propsini = df_family["propsini"]
+    plt.scatter(fam_prope, fam_propsini, s = 50-25*i, label = family_name_map[f])
+plt.legend()
+# %%
+# visualize first 5 asteroids for debugging
+
+# Plot the detected asteroids with their family in the proper elements phase space
+n = 5
+fig, axes = plt.subplots(n, 1, figsize=(10, int(n*5)))
+
+for i in range(n):
+	family_number = results_df.iloc[i]["matched_families"]
+	### RIGHT PLOT
+	# plot the family we identified the asteroid with
+	axins = axes[i].inset_axes([1.2, 0, 0.7, 0.7])
+	if len(family_number) != 0:
+		df_family = read_family_file(family_file_map[family_number[0]])
+		fam_prope = df_family["prope"]
+		fam_propsini = df_family["propsini"]
+		axins.scatter(fam_prope, fam_propsini, c = "grey", s = 10, alpha = 0.5, label = "Family members")
+	# plot the candidate asteroid
+	axins.scatter(merged_df.iloc[i]["pred_e"], merged_df.iloc[i]["pred_sini"], c = "black", marker='*', s = 100)
+	axins.scatter(merged_df.iloc[i]["pred_e"], merged_df.iloc[i]["pred_sini"], c = "red", marker='*', s = 35, label = merged_df.iloc[i]["Des'n"])
+	axins.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+	axins.set_aspect(1)
+
+	# connect the inset and large plots
+	axes[i].indicate_inset_zoom(axins, edgecolor="black")
+
+	### LEFT PLOT
+	# plot all potential families
+	top5_families = results_df.iloc[i]["top5_families"]
+	for f in top5_families:
+		df_family = read_family_file(family_file_map[f])
+		fam_prope = df_family["prope"]
+		fam_propsini = df_family["propsini"]
+		axes[i].scatter(fam_prope, fam_propsini, s = 10, alpha = 0.3, label = family_name_map[f])
+
+	# plot the asteroid
+	axes[i].scatter(merged_df.iloc[i]["pred_e"], merged_df.iloc[i]["pred_sini"], c = "black", marker='*', s = 200)
+	axes[i].scatter(merged_df.iloc[i]["pred_e"], merged_df.iloc[i]["pred_sini"], c = "red", marker='*', s = 100, label = merged_df.iloc[i]["Des'n"])
+
+	leg = axes[i].legend(loc="best")
+	for lh in leg.legend_handles: 
+		lh.set_alpha(1)
+
+	axes[i].set_aspect(1)
+
+plt.tight_layout(pad=2)
 # %%
