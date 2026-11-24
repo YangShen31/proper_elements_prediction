@@ -108,7 +108,7 @@ def integrate_asterods_to_nesvorny_epoch(df_e, epoch):
 		omega_list.append(orbit.omega)
 
 	assert np.all(np.array(a_list) > 0), "some integrations failed (have hyperbolic orbits)"
-	
+
 	# Extract only the orbital elments we need into a separate dataframe that is used with the ML model
 	merged_df = pd.DataFrame({"Des'n": df_e["Des'n"],
 							'a': np.abs(a_list), 
@@ -436,18 +436,26 @@ for family_number, file_path in family_file_map.items():
 
 	family_data[family_number] = fam["Des'n"][fam["test_set"] == 1]
 
+# %%
 true_families = []
 des = []
-
 # pick one random asteroid from the test set in each family
 for no, desns in family_data.items():
+	# exclude the first memeber of each family, since we use those to pick the top 5
+	desns = desns[1:]
+	# ensure there are enough members in the family
+	if len(desns)+1 < 5:
+		print(f"skipped {no}. insufficient members in the test set ({len(desns)+1})")
+		continue
+	
 	# make sure we pick one which starts with a "K" so it can be looked up in the horizons database
 	desns = desns[desns.str.startswith('K')]
 	if len(desns) == 0:
-		print(f"skipped {no}. no members in the test set")
-		continue
+			print(f"skipped {no}. no asteroids left in family can be queried from the horizons database")
+			continue
+
 	true_families.append(no)
-	des.append(desns.sample(1, random_state=1).to_list()[0])
+	des.append(desns.sample(1, random_state=0, ignore_index=True).to_list()[0])
 # %%
 epoch = 2460400.5
 df_e = query_asteroids_at_epoch(des, epoch)
