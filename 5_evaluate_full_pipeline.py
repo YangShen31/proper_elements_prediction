@@ -107,6 +107,8 @@ def integrate_asterods_to_nesvorny_epoch(df_e, epoch):
 		Omega_list.append(orbit.Omega)
 		omega_list.append(orbit.omega)
 
+	assert np.all(np.array(a_list) > 0), "some integrations failed (have hyperbolic orbits)"
+	
 	# Extract only the orbital elments we need into a separate dataframe that is used with the ML model
 	merged_df = pd.DataFrame({"Des'n": df_e["Des'n"],
 							'a': np.abs(a_list), 
