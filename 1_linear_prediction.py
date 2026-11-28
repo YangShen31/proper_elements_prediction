@@ -92,10 +92,11 @@ with Pool(ncpus) as p:
 # u0,v0 are the complex proper elements in the invariable frame
 # g0,s0 are the proper frequencies
 # a, e, Incl., Node, Peri. are oscullating elements in the invariable frame
-df_all = pd.DataFrame(table, columns=["time","Des'n", "u0", "v0", "g0", "s0", "a", "e", "Incl.", "Node", "Peri."])
+df_all = pd.DataFrame(table, columns=["time","Des'n", "prope_linear", "propsini_linear", "g0", "s0", "a", "e", "Incl.", "Node", "Peri."])
 
 # Calculate linear theory time (per asteroid, not wall clock)
 print(f"Linear Theory Time: {df_all['time'].sum():.2f} sec for {len(nesvorny_df)} asteroids. {df_all['time'].mean():.4} sec / asteroid")
 df_all = df_all.drop('time', axis=1)
 # %%
 df_all.to_csv("data/linear_theory.csv")
+# %%

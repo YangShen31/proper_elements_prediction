@@ -509,6 +509,16 @@ def linear_theory_prediction(e, inc, pomega, Omega, propa, simpler_secular_theor
 
     u0 = X - np.sum(list(tp_h.F_e.values()))
     v0 = Y - np.sum(list(tp_h.F_inc.values()))
+
+    A_X = np.abs(u0)
+    # e_p = np.sqrt(np.clip(1-(1-A_X**2/2)**2, 0, 1))
+    e_p = np.sqrt(np.clip(A_X**2 - (1/4)*(A_X**4), 0, 1))
+
+    A_Y = np.abs(v0)
+    sin_half_i = np.clip(A_Y/(2*(1-e_p**2)**0.25), 0, 1)
+    i_p = 2*np.arcsin(sin_half_i)
+    sini = np.sin(i_p)
+
     g0, s0 = calc_g0_and_s0(propa, simpler_secular_theory)
 
-    return u0, v0, g0, s0
+    return e_p, sini, g0, s0
